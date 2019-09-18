@@ -17,6 +17,7 @@ class CodepointInfo:
         self.lowercaseMapping = None
         self.titlecaseMapping = None
         self.mirrorMapping = None
+        self.lineBreakOpportunity = None
         self.glyphdata = bytearray()
 
 bidi_info = dict()
@@ -176,6 +177,27 @@ for line in open('BidiMirroring.txt', 'r'):
     if codepoint in bidi_info:
         bidi_info[codepoint].mirrorMapping = line[1]
 
+for line in open('LineBreak.txt', 'r'):
+    line = line.strip().split(";")
+    if len(line[0]) > 0 and line[0][0] == "#":
+        continue
+    if len(line) < 2:
+        continue
+    codepoint = line[0]
+    lbclass = line[1][:3].strip(" ")
+    if len(codepoint.split("..")) > 1:
+        codepoints = codepoint.split("..")
+        start = int(codepoints[0], 16)
+        end = int(codepoints[1], 16)
+        for i in range(start, end + 1):
+            codepoint = "{0:#06X}".format(i)[2:]
+            if codepoint in bidi_info:
+                if lbclass in ["SP", "ZWS", "B2", "BA", "HY", "SY", "ID"]:
+                    bidi_info[codepoint].lineBreakOpportunity = True
+    elif codepoint in bidi_info:
+        if lbclass in ["SP", "ZWS", "B2", "BA", "HY", "SY", "ID"]:
+            bidi_info[codepoint].lineBreakOpportunity = True
+
 
 unifont = dict()
 
@@ -260,7 +282,7 @@ def generate_unifont_bin():
                 lookup_entry |= 0b0011000000000000000000000000000
             if character.isControl:
                 lookup_entry |= 0b0100000000000000000000000000000
-            if codepoint in ["0009", "0020", "1680", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2008", "2009", "200A", "205F", "3000", "180E", "200B", "200C", "200D"]:
+            if character.lineBreakOpportunity:
                 lookup_entry |= 0b1000000000000000000000000000000
 
             lookup += struct.pack('<I', current_position)
@@ -421,7 +443,7 @@ while 1:
         size = 0
         for codepoint in unifont:
             character = unifont[codepoint]
-            if True: # add constraints here for testing
+            if character.lineBreakOpportunity: # add constraints here for testing
                 print("{} {}".format(codepoint, character.name))
             size += len(unifont[codepoint].glyphdata)
         print("\n\n")
