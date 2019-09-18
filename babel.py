@@ -266,7 +266,7 @@ def generate_unifont_bin():
             lookup += struct.pack('<I', current_position)
 
             category_and_capitalization = character.category
-            bidi_and_mirroring = character.bidiClass
+            bidi_and_other = character.bidiClass
             if character.uppercaseMapping is not None:
                 category_and_capitalization |= 0b00100000
             if character.lowercaseMapping is not None:
@@ -275,9 +275,11 @@ def generate_unifont_bin():
                 category_and_capitalization |= 0b10000000
             if character.mirrorMapping is not None:
                 bidi_and_mirroring |= 0b00010000
-            # still have three bits to spare here!
+            if codepoint in ["0009", "000A", "000B", "000C", "000D", "0020", "0085", "00A0", "1680", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "200A", "2028", "2029", "202F", "205F", "3000"]:
+                bidi_and_other |= 0b00100000 # whitespace characters from PropList.txt
+            # still have two bits to spare here!
             metadata += struct.pack('<B', category_and_capitalization)
-            metadata += struct.pack('<B', bidi_and_mirroring)
+            metadata += struct.pack('<B', bidi_and_other)
 
             glyphdata = character.glyphdata
             glyphs += glyphdata
