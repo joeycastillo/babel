@@ -44,15 +44,15 @@ category_mapping = {
     'Sm' : 19,
     'Sc' : 20,
     'Sk' : 21,
-    'So' : 23,
-    'Zs' : 24,
-    'Zl' : 25,
-    'Zp' : 26,
-    'Cc' : 27,
-    'Cf' : 28,
-    'Cs' : 29,
-    'Co' : 30,
-    'Cn' : 31
+    'So' : 22,
+    'Zs' : 23,
+    'Zl' : 24,
+    'Zp' : 25,
+    'Cc' : 26,
+    'Cf' : 27,
+    'Cs' : 28,
+    'Co' : 29,
+    'Cn' : 30
 }
 
 bidi_mapping = {
@@ -116,6 +116,8 @@ def addFakeCodepoints(start, end, name):
         codepoint = "0x{:X}".format(i)[2:]
         info.isValid = True
         info.name = name
+        info.category = 5
+        info.bidiClass = 1
         info.isNSM = False
         info.isLTR = True
         info.isRTL = False
@@ -244,7 +246,8 @@ def generate_unifont_bin():
     lookup = bytearray()
     metadata = bytearray()
     glyphs = bytearray()
-    stop_at = 0x10000
+    last_codepoint = 0xFFFF
+    stop_at = last_codepoint + 1
 
     current_position = 256 + stop_at * 6
     for i in range(0, stop_at):
@@ -253,7 +256,6 @@ def generate_unifont_bin():
         if codepoint in unifont:
             character = unifont[codepoint]
             glyphdata = character.glyphdata
-            lookup_entry = current_position
             # A 4MB chip uses 22-bit addresses:
             # 0b0000000000xxxxxxxxxxxxxxxxxxxxxx
             # this gives us the 10 high bits to use for whatever we want!
@@ -264,28 +266,29 @@ def generate_unifont_bin():
             # L - Character forces a mode change to LTR, also part of mirroring test
             #      NOTE: this is a bit funky, but: 
             #       * If R and L are both 0, the character is drawn normally in the current text run.
-            #       * if R and L are both 1, the character is drawn mirrored in the current text run.
+            #       * if R and L are both 1, the character is drawn mirrored in the current text run, if the run is RTL.
             #       * if R and not L, or L and not R, the layout mode changes. None of these glyphs mirror.
             # C - Control character, do not draw
             # B - Whitespace or other line-breaking character. If word wrapping, you can wrap on this.
+            lookup_entry = current_position
             if len(glyphdata) == 16 and not character.isNSM:
-                lookup_entry |= 0b0000001000000000000000000000000
+                lookup_entry |= 0b00000010000000000000000000000000
             if len(glyphdata) == 32 and not character.isNSM:
-                lookup_entry |= 0b0000010000000000000000000000000
+                lookup_entry |= 0b00000100000000000000000000000000
             if character.isCombining:
-                lookup_entry |= 0b0000100000000000000000000000000
+                lookup_entry |= 0b00001000000000000000000000000000
             if character.isRTL:
-                lookup_entry |= 0b0001000000000000000000000000000
+                lookup_entry |= 0b00010000000000000000000000000000
             if character.isLTR:
-                lookup_entry |= 0b0010000000000000000000000000000
+                lookup_entry |= 0b00100000000000000000000000000000
             if character.isMirrored:
-                lookup_entry |= 0b0011000000000000000000000000000
+                lookup_entry |= 0b00110000000000000000000000000000
             if character.isControl:
-                lookup_entry |= 0b0100000000000000000000000000000
+                lookup_entry |= 0b01000000000000000000000000000000
             if character.lineBreakOpportunity:
-                lookup_entry |= 0b1000000000000000000000000000000
+                lookup_entry |= 0b10000000000000000000000000000000
 
-            lookup += struct.pack('<I', current_position)
+            lookup += struct.pack('<I', lookup_entry)
 
             category_and_capitalization = character.category
             bidi_and_other = character.bidiClass
@@ -296,7 +299,7 @@ def generate_unifont_bin():
             if character.titlecaseMapping is not None:
                 category_and_capitalization |= 0b10000000
             if character.mirrorMapping is not None:
-                bidi_and_mirroring |= 0b00010000
+                bidi_and_other |= 0b00010000
             if codepoint in ["0009", "000A", "000B", "000C", "000D", "0020", "0085", "00A0", "1680", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "200A", "2028", "2029", "202F", "205F", "3000"]:
                 bidi_and_other |= 0b00100000 # whitespace characters from PropList.txt
             # still have two bits to spare here!
@@ -361,10 +364,14 @@ def generate_unifont_bin():
     header += struct.pack('<B', 0)                  # version, major
     header += struct.pack('<B', 1)                  # version, minor
     header += struct.pack('<B', 0)                  # flags for features?
-    header += struct.pack('<B', 0)                  # more flags, make it an even 8 bits
+    header += struct.pack('<B', 0)                  # more flags, make it an even 8 bytes
+    header += struct.pack('<I', last_codepoint)
     header += struct.pack('<I', start_of_lookup)
     header += struct.pack('<I', start_of_metadata)
     header += struct.pack('<I', start_of_glyph_data)
+    # pad out the first half of the header to 128 bytes
+    while len(header) < 128:
+        header += b'\x00'
     # the rest of the header is just kind of just info about the stuff we stuffed at the end.
     # the general format: 
     #  * 3 bytes: the location of the data
@@ -373,62 +380,66 @@ def generate_unifont_bin():
     #  * 1 byte: flags about the data
     # why did i pack it this way? because i just want to read the 4-byte values as an unsigned little-endian int.
     # value & 0xFF gives me the type/flags, value >> 8 gives me the location/length
-    header += struct.pack('<I', start_of_mapping)
+
     loc = struct.pack('<I', start_of_mapping)
+    header += struct.pack('<B', 1)                  # this is just arbitrary, 1 means mappings from lowercase to uppercase
     header += struct.pack('<B', loc[0])
     header += struct.pack('<B', loc[1])
     header += struct.pack('<B', loc[2])
-    header += struct.pack('<B', 1)                  # this is just arbitrary, 1 means mappings from lowercase to uppercase
     length = struct.pack('<I', len(uppercase_mappings))
+    header += struct.pack('<B', 0)                  # flags is more hypothetical than real at this point
     header += struct.pack('<B', length[0])
     header += struct.pack('<B', length[1])
     header += struct.pack('<B', length[2])
-    header += struct.pack('<B', 0)                  # flags is more hypothetical than real at this point
     start_of_mapping += len(uppercase_mappings)
     
     loc = struct.pack('<I', start_of_mapping)
+    header += struct.pack('<B', 2)                  # 2 means mappings from uppercase to lowercase
     header += struct.pack('<B', loc[0])
     header += struct.pack('<B', loc[1])
     header += struct.pack('<B', loc[2])
-    header += struct.pack('<B', 2)                  # 2 means mappings from uppercase to lowercase
     length = struct.pack('<I', len(lowercase_mappings))
+    header += struct.pack('<B', 0)
     header += struct.pack('<B', length[0])
     header += struct.pack('<B', length[1])
     header += struct.pack('<B', length[2])
-    header += struct.pack('<B', 0)
     start_of_mapping += len(lowercase_mappings)
     
     loc = struct.pack('<I', start_of_mapping)
+    header += struct.pack('<B', 3)                  # 3 means titlecase mappings
     header += struct.pack('<B', loc[0])
     header += struct.pack('<B', loc[1])
     header += struct.pack('<B', loc[2])
-    header += struct.pack('<B', 3)                  # 3 means titlecase mappings
     length = struct.pack('<I', len(titlecase_mappings))
+    header += struct.pack('<B', 0)
     header += struct.pack('<B', length[0])
     header += struct.pack('<B', length[1])
     header += struct.pack('<B', length[2])
-    header += struct.pack('<B', 0)
     start_of_mapping += len(titlecase_mappings)
     
     loc = struct.pack('<I', start_of_mapping)
+    header += struct.pack('<B', 4)                  # 4 means mappings from normal to mirrored
     header += struct.pack('<B', loc[0])
     header += struct.pack('<B', loc[1])
     header += struct.pack('<B', loc[2])
-    header += struct.pack('<B', 4)                  # 4 means mappings from normal to mirrored
     length = struct.pack('<I', len(mirror_mappings))
+    header += struct.pack('<B', 0)
     header += struct.pack('<B', length[0])
     header += struct.pack('<B', length[1])
     header += struct.pack('<B', length[2])
-    header += struct.pack('<B', 0)
     start_of_mapping += len(mirror_mappings)
     
 
     while len(header) < 256:
-        header += b'\xFF'
+        header += b'\x00'
 
     output = header + lookup + metadata + glyphs + uppercase_mappings + lowercase_mappings + titlecase_mappings + mirror_mappings
 
     print("Final size: {} bytes.\n\n".format(len(output)))
+    
+    while len(output) < 2097152:
+        output += b'\xFF'
+
     outfile = open('babel.bin', 'wb')
     outfile.write(output)
 
