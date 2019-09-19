@@ -13,12 +13,7 @@ void setup() {
   digitalWrite(9, HIGH);
 
   Serial.println("Babel example");
-  Adafruit_FlashTransport_SPI flashTransport(4, &SPI);
-  Adafruit_SPIFlash flash(&flashTransport);
-  flash.begin();
-  Serial.print("JEDEC ID: "); Serial.println(flash.getJEDECID(), HEX);
-  Serial.print("Flash size: "); Serial.println(flash.size());
-  BabelSPIFlash babel(&flash);
+  BabelSPIFlash babel(4, &SPI);
   BabelGlyph glyph;
   babel.begin();
   int last = babel.get_last_available_codepoint();

@@ -16,8 +16,10 @@ class BabelMockDevice: public BabelDevice {
 public:
     BabelMockDevice(const char *filename);
     ~BabelMockDevice();
+    void begin();
     void read(uint32_t addr, void *data, uint32_t len);
 private:
+    const char *filename;
     FILE *file;
 };
 

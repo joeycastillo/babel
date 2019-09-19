@@ -15,10 +15,13 @@
 
 class BabelSPIFlash: public BabelDevice {
 public:
-    BabelSPIFlash(Adafruit_SPIFlash *flash);
+    BabelSPIFlash(uint8_t ss, SPIClass *spi);
     ~BabelSPIFlash();
+    void begin();
     void read(uint32_t addr, void *data, uint32_t len);
 private:
+    uint8_t cs;
+    SPIClass *spi;
     Adafruit_SPIFlash *flash;
 };
 

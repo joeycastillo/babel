@@ -7,16 +7,18 @@
 //
 
 #include "BabelMockDevice.h"
-#include <iostream>
-
-using namespace std;
 
 BabelMockDevice::BabelMockDevice(const char *filename) {
-    this->file = fopen(filename, "r");
+    this->filename = filename;
 }
 
 BabelMockDevice::~BabelMockDevice() {
     fclose(this->file);
+}
+
+void BabelMockDevice::begin() {
+    this->file = fopen(this->filename, "r");
+    BabelDevice::begin();
 }
 
 void BabelMockDevice::read(uint32_t addr, void *data, uint32_t len) {
