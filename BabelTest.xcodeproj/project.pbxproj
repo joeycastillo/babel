@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		AA1F30BF23326AE6005A2B82 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA1F30BE23326AE6005A2B82 /* main.cpp */; };
 		AA1F30CA23326B4C005A2B82 /* BabelMockDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA1F30C823326B4C005A2B82 /* BabelMockDevice.cpp */; };
-		AAF39BF72332AB8200A175B6 /* BabelDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAF39BF52332AB8200A175B6 /* BabelDevice.cpp */; };
+		AA38C50F2333369800630F22 /* BabelDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AA38C50D2333369700630F22 /* BabelDevice.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,11 +27,11 @@
 /* Begin PBXFileReference section */
 		AA1F30BB23326AE6005A2B82 /* BabelTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = BabelTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA1F30BE23326AE6005A2B82 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		AA1F30C623326B32005A2B82 /* BabelDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BabelDevice.h; sourceTree = "<group>"; };
 		AA1F30C823326B4C005A2B82 /* BabelMockDevice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BabelMockDevice.cpp; sourceTree = "<group>"; };
 		AA1F30C923326B4C005A2B82 /* BabelMockDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BabelMockDevice.h; sourceTree = "<group>"; };
-		AAF39BF423329A6500A175B6 /* BabelMacros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BabelMacros.h; sourceTree = "<group>"; };
-		AAF39BF52332AB8200A175B6 /* BabelDevice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = BabelDevice.cpp; sourceTree = "<group>"; };
+		AA38C50A2333369700630F22 /* BabelDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BabelDevice.h; sourceTree = "<group>"; };
+		AA38C50C2333369700630F22 /* BabelMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BabelMacros.h; sourceTree = "<group>"; };
+		AA38C50D2333369700630F22 /* BabelDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BabelDevice.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +48,7 @@
 		AA1F30B223326AE6005A2B82 = {
 			isa = PBXGroup;
 			children = (
+				AA38C5082333369700630F22 /* src */,
 				AA1F30BD23326AE6005A2B82 /* BabelTest */,
 				AA1F30BC23326AE6005A2B82 /* Products */,
 			);
@@ -64,14 +65,21 @@
 		AA1F30BD23326AE6005A2B82 /* BabelTest */ = {
 			isa = PBXGroup;
 			children = (
-				AAF39BF423329A6500A175B6 /* BabelMacros.h */,
-				AA1F30C623326B32005A2B82 /* BabelDevice.h */,
-				AAF39BF52332AB8200A175B6 /* BabelDevice.cpp */,
 				AA1F30C923326B4C005A2B82 /* BabelMockDevice.h */,
 				AA1F30C823326B4C005A2B82 /* BabelMockDevice.cpp */,
 				AA1F30BE23326AE6005A2B82 /* main.cpp */,
 			);
 			path = BabelTest;
+			sourceTree = "<group>";
+		};
+		AA38C5082333369700630F22 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				AA38C50C2333369700630F22 /* BabelMacros.h */,
+				AA38C50A2333369700630F22 /* BabelDevice.h */,
+				AA38C50D2333369700630F22 /* BabelDevice.cpp */,
+			);
+			path = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -132,7 +140,7 @@
 			files = (
 				AA1F30BF23326AE6005A2B82 /* main.cpp in Sources */,
 				AA1F30CA23326B4C005A2B82 /* BabelMockDevice.cpp in Sources */,
-				AAF39BF72332AB8200A175B6 /* BabelDevice.cpp in Sources */,
+				AA38C50F2333369800630F22 /* BabelDevice.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
