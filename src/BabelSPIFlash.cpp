@@ -1,15 +1,8 @@
-//
-//  BabelSPIFlash.cpp
-//  BabelTest
-//
-//  Created by Joey Castillo on 9/18/19.
-//  Copyright © 2019 Joey Castillo. All rights reserved.
-//
-//  Portions of this file cribbed from the Adafruit_SPIFlash library under the MIT license.
-//
 /*
  * The MIT License (MIT)
  *
+ * Copyright © 2019 Joey Castillo. All rights reserved.
+ *     Portions of this file were cribbed from the Adafruit_SPIFlash library.
  * Copyright (c) 2019 Ha Thach and Dean Miller for Adafruit Industries LLC
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
