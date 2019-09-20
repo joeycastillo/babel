@@ -29,5 +29,6 @@ This still leaves just over 26 kilobytes at the end, for more mappings or other 
 ## Next Steps
 
 - [ ] Create a subclass of Babel that can draw text to a GFX display.
+- [ ] String manipulation (uppercase, lowercase, capitalization, word wrap)
 - [ ] Make a simple FeatherWing with the chip, for easier testing on more devices.
 - [ ] Port to CircuitPython!
