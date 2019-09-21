@@ -20,7 +20,7 @@ void setup() {
   for (int codepoint = 0; codepoint <= last; codepoint++) {
     if (babel.fetch_glyph_data(codepoint, &glyph)) {
       uint16_t extended = babel.fetch_glyph_extended_info(codepoint);
-      uint32_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+      uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
       drawGlyph(glyph);
       Serial.print("codepoint ");
       Serial.print(codepoint, HEX);
@@ -28,29 +28,29 @@ void setup() {
       Serial.println(width);
       Serial.print("basic info ");
       Serial.println(glyph.info, HEX);
-      if (BABEL_LUT_GET_CONTROL_CHARACTER(glyph.info)) Serial.println("It is a control character.");
-      if (BABEL_LUT_GET_MARK_IS_COMBINING(glyph.info)) Serial.println("It is a combining or enclosing mark.");
-      if (BABEL_LUT_GET_LINEBREAK_OPPORTUNITY(glyph.info)) Serial.println("You can break after this character.");
-      if (BABEL_LUT_GET_STRONG_LTR(glyph.info)) Serial.println("It has a strong LTR affinity.");
-      else if (BABEL_LUT_GET_STRONG_RTL(glyph.info)) Serial.println("It has a strong LTR affinity.");
+      if (BABEL_INFO_GET_CONTROL_CHARACTER(glyph.info)) Serial.println("It is a control character.");
+      if (BABEL_INFO_GET_MARK_IS_COMBINING(glyph.info)) Serial.println("It is a combining or enclosing mark.");
+      if (BABEL_INFO_GET_LINEBREAK_OPPORTUNITY(glyph.info)) Serial.println("You can break after this character.");
+      if (BABEL_INFO_GET_STRONG_LTR(glyph.info)) Serial.println("It has a strong LTR affinity.");
+      else if (BABEL_INFO_GET_STRONG_RTL(glyph.info)) Serial.println("It has a strong LTR affinity.");
       else Serial.println("It has no directional affinity.");
       Serial.print("extended info ");
       Serial.println(extended, HEX);
-      if (BABEL_LUT_GET_MIRRORED_IN_RTL(glyph.info))
+      if (BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info))
       {
         Serial.println("It is mirrored in RTL mode.");
-        if BABEL_META_GET_HAS_BIDI_MIRRORING_MAPPING(extended) {
+        if BABEL_EXTENDED_GET_HAS_BIDI_MIRRORING_MAPPING(extended) {
           Serial.println("And it has a mirrored glyph available.");
         } else {
           Serial.println("But it has no mirrored glyph! We'll have to improvise.");
         }
       }
-      if BABEL_META_GET_HAS_LOWERCASE_MAPPING(extended) Serial.println("It has mapping to lowercase.");
-      if BABEL_META_GET_HAS_UPPERCASE_MAPPING(extended) Serial.println("It has mapping to UPPERCASE.");
-      if BABEL_META_GET_HAS_TITLECASE_MAPPING(extended) Serial.println("It has mapping to Titlecase.");
-      if BABEL_META_GET_IS_WHITESPACE(extended) Serial.println("It is a whitespace character.");
+      if BABEL_EXTENDED_GET_HAS_LOWERCASE_MAPPING(extended) Serial.println("It has mapping to lowercase.");
+      if BABEL_EXTENDED_GET_HAS_UPPERCASE_MAPPING(extended) Serial.println("It has mapping to UPPERCASE.");
+      if BABEL_EXTENDED_GET_HAS_TITLECASE_MAPPING(extended) Serial.println("It has mapping to Titlecase.");
+      if BABEL_EXTENDED_GET_IS_WHITESPACE(extended) Serial.println("It is a whitespace character.");
       Serial.println("Its category is: ");
-      switch (BABEL_META_GET_CHAR_CATEGORY(extended)) {
+      switch (BABEL_EXTENDED_GET_CHAR_CATEGORY(extended)) {
         case BABEL_CHAR_CATEGORY_LETTER_UPPERCASE:
         Serial.println("CHAR_CATEGORY_LETTER_UPPERCASE");
         break;
@@ -146,7 +146,7 @@ void setup() {
       }
       Serial.println();
       Serial.println("Its bidi class is: ");
-      switch (BABEL_META_GET_BIDI_CLASS(extended)) {
+      switch (BABEL_EXTENDED_GET_BIDI_CLASS(extended)) {
         case BABEL_BIDI_CLASS_LEFT_TO_RIGHT:
         Serial.println("BIDI_CLASS_LEFT_TO_RIGHT");
         break;
@@ -210,7 +210,7 @@ void loop() {
 }
 
 void drawGlyph(BabelGlyph glyph) {
-  uint32_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+  uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
   if (width == 8) {
     for (int i = 0; i < 16; i++) {
       for (uint8_t mask = 0x80; mask > 0; mask /= 2) Serial.print(glyph.glyphData[i] & mask ? "#" : " ");

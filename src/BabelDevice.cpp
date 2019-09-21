@@ -116,9 +116,9 @@ bool BabelDevice::fetch_glyph_data(uint32_t codepoint, BabelGlyph *glyph) {
         retVal = false;
     }
     
-    loc = BABEL_LUT_GET_GLYPH_LOCATION(glyph->info);
+    loc = BABEL_INFO_GET_GLYPH_LOCATION(glyph->info);
 
-    if (BABEL_LUT_GET_GLYPH_WIDTH(glyph->info) == 16) {
+    if (BABEL_INFO_GET_GLYPH_WIDTH(glyph->info) == 16) {
         this->read(loc, &glyph->glyphData, 32);
         return retVal;
     } else {

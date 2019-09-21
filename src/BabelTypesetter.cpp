@@ -53,9 +53,9 @@ void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, u
 }
 
 int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color) {
-    uint8_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+    uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
-    bool mirrored = ((1 == -1) && BABEL_LUT_GET_MIRRORED_IN_RTL(glyph.info));
+    bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
 
     if (mirrored)
     {
@@ -133,7 +133,7 @@ size_t BabelTypesetter::writeCodepoint(uint32_t codepoint) {
     } else if(codepoint == '\r') {
         return 0;
     } else if (this->glyphStorage->fetch_glyph_data(codepoint, &glyph)) {
-        int width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+        int width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
         // word wrap should go here
         int xPos = (this->cursor_x + width * this->direction);
         int advance = drawGlyph(this->cursor_x, this->cursor_y, glyph, this->textColor);

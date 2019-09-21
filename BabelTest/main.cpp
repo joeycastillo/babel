@@ -29,7 +29,7 @@
 using namespace std;
 
 void drawGlyph(BabelGlyph glyph) {
-    uint32_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+    uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     if (width == 8) {
         for (int i = 0; i < 16; i++) {
             bitset<8> x(glyph.glyphData[i]);
@@ -67,34 +67,34 @@ int main(int argc, const char * argv[]) {
     for (uint32_t codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
         if (babel.fetch_glyph_data(codepoint, &glyph))
         {
-            uint32_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
+            uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
             drawGlyph(glyph);
             cout << "codepoint " << std::hex << codepoint << " has width " << std::dec << width << "." << endl;
             bitset<32> x(glyph.info);
             cout << "basic info " << hex << glyph.info << " - " << x << endl;
-            if (BABEL_LUT_GET_CONTROL_CHARACTER(glyph.info)) cout << "It is a control character." << endl;
-            if (BABEL_LUT_GET_MARK_IS_COMBINING(glyph.info)) cout << "It is a combining or enclosing mark." << endl;
-            if (BABEL_LUT_GET_LINEBREAK_OPPORTUNITY(glyph.info)) cout << "You can break after this character." << endl;
-            if (BABEL_LUT_GET_STRONG_LTR(glyph.info)) cout << "It has a strong LTR affinity." << endl;
-            else if (BABEL_LUT_GET_STRONG_RTL(glyph.info)) cout << "It has a strong LTR affinity." << endl;
+            if (BABEL_INFO_GET_CONTROL_CHARACTER(glyph.info)) cout << "It is a control character." << endl;
+            if (BABEL_INFO_GET_MARK_IS_COMBINING(glyph.info)) cout << "It is a combining or enclosing mark." << endl;
+            if (BABEL_INFO_GET_LINEBREAK_OPPORTUNITY(glyph.info)) cout << "You can break after this character." << endl;
+            if (BABEL_INFO_GET_STRONG_LTR(glyph.info)) cout << "It has a strong LTR affinity." << endl;
+            else if (BABEL_INFO_GET_STRONG_RTL(glyph.info)) cout << "It has a strong LTR affinity." << endl;
             else cout << "It has no directional affinity." << endl;
             bitset<16> y(glyph.extendedInfo);
             cout << "extended info " << hex << glyph.extendedInfo << " - " << y << endl;
-            if (BABEL_LUT_GET_MIRRORED_IN_RTL(glyph.info))
+            if (BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info))
             {
                 cout << "It is mirrored in RTL mode." << endl;
-                if BABEL_META_GET_HAS_BIDI_MIRRORING_MAPPING(glyph.extendedInfo) {
+                if BABEL_EXTENDED_GET_HAS_BIDI_MIRRORING_MAPPING(glyph.extendedInfo) {
                     cout << "And it has a mirrored glyph available." << endl;
                 } else {
                     cout << "But it has no mirrored glyph! We'll have to improvise." << endl;
                 }
             }
-            if BABEL_META_GET_HAS_LOWERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to lowercase." << endl;
-            if BABEL_META_GET_HAS_UPPERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to UPPERCASE." << endl;
-            if BABEL_META_GET_HAS_TITLECASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to Titlecase." << endl;
-            if BABEL_META_GET_IS_WHITESPACE(glyph.extendedInfo) cout << "It is a whitespace character." << endl;
+            if BABEL_EXTENDED_GET_HAS_LOWERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to lowercase." << endl;
+            if BABEL_EXTENDED_GET_HAS_UPPERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to UPPERCASE." << endl;
+            if BABEL_EXTENDED_GET_HAS_TITLECASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to Titlecase." << endl;
+            if BABEL_EXTENDED_GET_IS_WHITESPACE(glyph.extendedInfo) cout << "It is a whitespace character." << endl;
             cout << "Its category is: ";
-            switch (BABEL_META_GET_CHAR_CATEGORY(glyph.extendedInfo)) {
+            switch (BABEL_EXTENDED_GET_CHAR_CATEGORY(glyph.extendedInfo)) {
                 case BABEL_CHAR_CATEGORY_LETTER_UPPERCASE:
                     cout << "CHAR_CATEGORY_LETTER_UPPERCASE";
                     break;
@@ -191,7 +191,7 @@ int main(int argc, const char * argv[]) {
             }
             cout << endl;
             cout << "Its bidi class is: ";
-            switch (BABEL_META_GET_BIDI_CLASS(glyph.extendedInfo)) {
+            switch (BABEL_EXTENDED_GET_BIDI_CLASS(glyph.extendedInfo)) {
                 case BABEL_BIDI_CLASS_LEFT_TO_RIGHT:
                     cout << "BIDI_CLASS_LEFT_TO_RIGHT";
                     break;

@@ -48,14 +48,14 @@ public:
      @returns A uint32_t that contains the glyph's location on the device in the lower 22 bits, and some basic metadata in the higher 10 bits.
      @param codepoint The codepoint whose basic data you want to fetch.
      @note The macros in BabelMacros.h help to get the desired data out of this value.
-     @see BABEL_LUT_GET_GLYPH_LOCATION
-     @see BABEL_LUT_GET_GLYPH_WIDTH
-     @see BABEL_LUT_GET_MARK_IS_COMBINING
-     @see BABEL_LUT_GET_MIRRORED_IN_RTL
-     @see BABEL_LUT_GET_STRONG_RTL
-     @see BABEL_LUT_GET_STRONG_LTR
-     @see BABEL_LUT_GET_CONTROL_CHARACTER
-     @see BABEL_LUT_GET_LINEBREAK_OPPORTUNITY
+     @see BABEL_INFO_GET_GLYPH_LOCATION
+     @see BABEL_INFO_GET_GLYPH_WIDTH
+     @see BABEL_INFO_GET_MARK_IS_COMBINING
+     @see BABEL_INFO_GET_MIRRORED_IN_RTL
+     @see BABEL_INFO_GET_STRONG_RTL
+     @see BABEL_INFO_GET_STRONG_LTR
+     @see BABEL_INFO_GET_CONTROL_CHARACTER
+     @see BABEL_INFO_GET_LINEBREAK_OPPORTUNITY
     */
     uint32_t fetch_glyph_basic_info(uint32_t codepoint);
     
@@ -64,13 +64,13 @@ public:
      @returns A uint16_t that contains a 5-bit value for the character's general category, a 4-bit value for the character's bidirectional class, and several flags that indicate the presence of mappings.
      @param codepoint The codepoint whose extended data you want to fetch.
      @note The macros in BabelMacros.h help to get the desired data out of this value.
-     @see BABEL_META_GET_CHAR_CATEGORY
-     @see BABEL_META_GET_BIDI_CLASS
-     @see BABEL_META_GET_HAS_UPPERCASE_MAPPING
-     @see BABEL_META_GET_HAS_LOWERCASE_MAPPING
-     @see BABEL_META_GET_HAS_TITLECASE_MAPPING
-     @see BABEL_META_GET_HAS_BIDI_MIRRORING_MAPPING
-     @see BABEL_META_GET_IS_WHITESPACE
+     @see BABEL_EXTENDED_GET_CHAR_CATEGORY
+     @see BABEL_EXTENDED_GET_BIDI_CLASS
+     @see BABEL_EXTENDED_GET_HAS_UPPERCASE_MAPPING
+     @see BABEL_EXTENDED_GET_HAS_LOWERCASE_MAPPING
+     @see BABEL_EXTENDED_GET_HAS_TITLECASE_MAPPING
+     @see BABEL_EXTENDED_GET_HAS_BIDI_MIRRORING_MAPPING
+     @see BABEL_EXTENDED_GET_IS_WHITESPACE
     */
     uint16_t fetch_glyph_extended_info(uint32_t codepoint);
     
