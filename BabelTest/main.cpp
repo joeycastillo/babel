@@ -67,7 +67,6 @@ int main(int argc, const char * argv[]) {
     for (uint32_t codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
         if (babel.fetch_glyph_data(codepoint, &glyph))
         {
-            uint16_t extended = babel.fetch_glyph_extended_info(codepoint);
             uint32_t width = BABEL_LUT_GET_GLYPH_WIDTH(glyph.info);
             drawGlyph(glyph);
             cout << "codepoint " << std::hex << codepoint << " has width " << std::dec << width << "." << endl;
@@ -79,23 +78,23 @@ int main(int argc, const char * argv[]) {
             if (BABEL_LUT_GET_STRONG_LTR(glyph.info)) cout << "It has a strong LTR affinity." << endl;
             else if (BABEL_LUT_GET_STRONG_RTL(glyph.info)) cout << "It has a strong LTR affinity." << endl;
             else cout << "It has no directional affinity." << endl;
-            bitset<16> y(extended);
-            cout << "extended info " << hex << extended << " - " << y << endl;
+            bitset<16> y(glyph.extendedInfo);
+            cout << "extended info " << hex << glyph.extendedInfo << " - " << y << endl;
             if (BABEL_LUT_GET_MIRRORED_IN_RTL(glyph.info))
             {
                 cout << "It is mirrored in RTL mode." << endl;
-                if BABEL_META_GET_HAS_BIDI_MIRRORING_MAPPING(extended) {
+                if BABEL_META_GET_HAS_BIDI_MIRRORING_MAPPING(glyph.extendedInfo) {
                     cout << "And it has a mirrored glyph available." << endl;
                 } else {
                     cout << "But it has no mirrored glyph! We'll have to improvise." << endl;
                 }
             }
-            if BABEL_META_GET_HAS_LOWERCASE_MAPPING(extended) cout << "It has mapping to lowercase." << endl;
-            if BABEL_META_GET_HAS_UPPERCASE_MAPPING(extended) cout << "It has mapping to UPPERCASE." << endl;
-            if BABEL_META_GET_HAS_TITLECASE_MAPPING(extended) cout << "It has mapping to Titlecase." << endl;
-            if BABEL_META_GET_IS_WHITESPACE(extended) cout << "It is a whitespace character." << endl;
+            if BABEL_META_GET_HAS_LOWERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to lowercase." << endl;
+            if BABEL_META_GET_HAS_UPPERCASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to UPPERCASE." << endl;
+            if BABEL_META_GET_HAS_TITLECASE_MAPPING(glyph.extendedInfo) cout << "It has mapping to Titlecase." << endl;
+            if BABEL_META_GET_IS_WHITESPACE(glyph.extendedInfo) cout << "It is a whitespace character." << endl;
             cout << "Its category is: ";
-            switch (BABEL_META_GET_CHAR_CATEGORY(extended)) {
+            switch (BABEL_META_GET_CHAR_CATEGORY(glyph.extendedInfo)) {
                 case BABEL_CHAR_CATEGORY_LETTER_UPPERCASE:
                     cout << "CHAR_CATEGORY_LETTER_UPPERCASE";
                     break;
@@ -192,7 +191,7 @@ int main(int argc, const char * argv[]) {
             }
             cout << endl;
             cout << "Its bidi class is: ";
-            switch (BABEL_META_GET_BIDI_CLASS(extended)) {
+            switch (BABEL_META_GET_BIDI_CLASS(glyph.extendedInfo)) {
                 case BABEL_BIDI_CLASS_LEFT_TO_RIGHT:
                     cout << "BIDI_CLASS_LEFT_TO_RIGHT";
                     break;

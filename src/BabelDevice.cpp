@@ -25,16 +25,32 @@
 #include <string.h>
 #include "BabelDevice.h"
 
+#define BABEL_HEADER_LOC_RESERVED 0
+#define BABEL_HEADER_LOC_VERSION 2
+#define BABEL_HEADER_LOC_WIDTH 4
+#define BABEL_HEADER_LOC_HEIGHT 5
+#define BABEL_HEADER_LOC_FLAGS 6
+#define BABEL_HEADER_LOC_MAXGLYPH 8
+#define BABEL_HEADER_LOC_START_OF_LUT 12
+#define BABEL_HEADER_LOC_START_OF_GLYPHS 16
+#define BABEL_HEADER_LOC_START_OF_EXTRAS 20
+
+#define BABEL_HEADER_EXTRA_TYPE_UPPERCASE_MAPPINGS 1
+#define BABEL_HEADER_EXTRA_TYPE_LOWERCASE_MAPPINGS 2
+#define BABEL_HEADER_EXTRA_TYPE_TITLECASE_MAPPINGS 3
+#define BABEL_HEADER_EXTRA_TYPE_MIRRORING_MAPPINGS 4
+
+
 void BabelDevice::begin() {
     this->read(BABEL_HEADER_LOC_WIDTH, &this->width, sizeof(this->width));
     this->read(BABEL_HEADER_LOC_HEIGHT, &this->height, sizeof(this->height));
     this->read(BABEL_HEADER_LOC_MAXGLYPH, &this->last_codepoint, sizeof(this->last_codepoint));
     this->read(BABEL_HEADER_LOC_START_OF_LUT, &this->location_of_lut, sizeof(this->location_of_lut));
-    this->read(BABEL_HEADER_LOC_START_OF_META, &this->location_of_meta, sizeof(this->location_of_meta));
     this->read(BABEL_HEADER_LOC_START_OF_GLYPHS, &this->location_of_glyphs, sizeof(this->location_of_glyphs));
+    this->read(BABEL_HEADER_LOC_START_OF_EXTRAS, &this->location_of_extras, sizeof(this->location_of_extras));
     uint32_t extra_loc = 0;
     uint32_t extra_len = 0;
-    uint32_t currentPos = BABEL_HEADER_LOC_START_OF_EXTRAS;
+    uint32_t currentPos = this->location_of_extras;
     do {
         this->read(currentPos, &extra_loc, sizeof(extra_loc));
         currentPos += sizeof(extra_loc);
@@ -61,6 +77,7 @@ void BabelDevice::begin() {
     } while(extra_loc && (currentPos < 256));
     
     this->info_for_replacement_character = this->fetch_glyph_basic_info(0xFFFD);
+    this->extended_info_for_replacement_character = this->fetch_glyph_extended_info(0xFFFD);
 }
 
 uint32_t BabelDevice::get_last_available_codepoint() {
@@ -68,20 +85,18 @@ uint32_t BabelDevice::get_last_available_codepoint() {
 }
 
 uint32_t BabelDevice::fetch_glyph_basic_info(uint32_t codepoint) {
-    uint32_t loc = this->location_of_lut + codepoint * 4;
     uint32_t retVal;
+    uint32_t loc = this->location_of_lut + codepoint * 6;
 
-    if (loc == 0) return false;
     this->read(loc, &retVal, 4);
 
     return retVal;
 }
 
 uint16_t BabelDevice::fetch_glyph_extended_info(uint32_t codepoint) {
-    uint32_t loc = this->location_of_meta + codepoint * 2;
     uint16_t retVal;
+    uint32_t loc = 4 + this->location_of_lut + codepoint * 6;
 
-    if (loc == 0) return false;
     this->read(loc, &retVal, 2);
 
     return retVal;
@@ -89,14 +104,16 @@ uint16_t BabelDevice::fetch_glyph_extended_info(uint32_t codepoint) {
 
 bool BabelDevice::fetch_glyph_data(uint32_t codepoint, BabelGlyph *glyph) {
     bool retVal = true;
+    uint32_t loc = this->location_of_lut + codepoint * 6;
 
-    glyph->info = this->fetch_glyph_basic_info(codepoint);
+    this->read(loc, glyph, 6);
     if (!glyph->info) {
         glyph->info = this->info_for_replacement_character;
+        glyph->extendedInfo = this->extended_info_for_replacement_character;
         retVal = false;
     }
     
-    uint32_t loc = BABEL_LUT_GET_GLYPH_LOCATION(glyph->info);
+    loc = BABEL_LUT_GET_GLYPH_LOCATION(glyph->info);
 
     if (BABEL_LUT_GET_GLYPH_WIDTH(glyph->info) == 16) {
         this->read(loc, &glyph->glyphData, 32);

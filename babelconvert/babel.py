@@ -244,7 +244,6 @@ for line in open('unifont_csur-12.1.03.hex', 'r'):
 
 def generate_unifont_bin():
     lookup = bytearray()
-    metadata = bytearray()
     glyphs = bytearray()
     last_codepoint = 0xFFFF
     stop_at = last_codepoint + 1
@@ -303,8 +302,8 @@ def generate_unifont_bin():
             if codepoint in ["0009", "000A", "000B", "000C", "000D", "0020", "0085", "00A0", "1680", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "200A", "2028", "2029", "202F", "205F", "3000"]:
                 bidi_and_other |= 0b00100000 # whitespace characters from PropList.txt
             # still have two bits to spare here!
-            metadata += struct.pack('<B', category_and_capitalization)
-            metadata += struct.pack('<B', bidi_and_other)
+            lookup += struct.pack('<B', category_and_capitalization)
+            lookup += struct.pack('<B', bidi_and_other)
 
             glyphdata = character.glyphdata
             glyphs += glyphdata
@@ -313,7 +312,7 @@ def generate_unifont_bin():
         else:
             # waste of space but pad out the table for constant time lookup
             lookup += b'\x00\x00\x00\x00'
-            metadata += b'\x00\x00'
+            lookup += b'\x00\x00'
 
     uppercase_mappings = bytearray()
     for i in range(0, stop_at):
@@ -352,26 +351,19 @@ def generate_unifont_bin():
                 mirror_mappings += struct.pack('<H', int(character.mirrorMapping, 16))
 
     start_of_lookup = 256
-    start_of_metadata = start_of_lookup + len(lookup)
-    start_of_glyph_data = start_of_metadata + len(metadata)
+    start_of_glyph_data = start_of_lookup + len(lookup)
     start_of_mapping = start_of_glyph_data + len(glyphs)
     
     header = bytearray()
-    header += struct.pack('<B', 0)                  # reserved i guess
-    header += struct.pack('<B', 0)                  # reserved i guess
-    header += struct.pack('<B', 8)                  # nominal width
-    header += struct.pack('<B', 16)                 # nominal height
-    header += struct.pack('<B', 0)                  # version, major
-    header += struct.pack('<B', 1)                  # version, minor
-    header += struct.pack('<B', 0)                  # flags for features?
-    header += struct.pack('<B', 0)                  # more flags, make it an even 8 bytes
-    header += struct.pack('<I', last_codepoint)
-    header += struct.pack('<I', start_of_lookup)
-    header += struct.pack('<I', start_of_metadata)
-    header += struct.pack('<I', start_of_glyph_data)
-    # pad out the first half of the header to 128 bytes
-    while len(header) < 128:
-        header += b'\x00'
+    header += struct.pack('<H', 0x0000)                 # 2 bytes, reserved i guess
+    header += struct.pack('<H', 0x0001)                 # version, 2 bytes, major/minor
+    header += struct.pack('<B', 8)                      # 1 byte, nominal width
+    header += struct.pack('<B', 16)                     # 1 byte, nominal line height
+    header += struct.pack('<H', 0)                      # 2 bytes, flags for features?
+    header += struct.pack('<I', last_codepoint)         # the last Unicode codepoint in this file, inclusive
+    header += struct.pack('<I', start_of_lookup)        # the start of the lookup table, right after the header
+    header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
+    header += struct.pack('<I', len(header) + 4)        # the start of "extra" data infos, it's inside the header. In fact, it's up next.
     # the rest of the header is just kind of just info about the stuff we stuffed at the end.
     # the general format: 
     #  * 3 bytes: the location of the data
@@ -433,7 +425,7 @@ def generate_unifont_bin():
     while len(header) < 256:
         header += b'\x00'
 
-    output = header + lookup + metadata + glyphs + uppercase_mappings + lowercase_mappings + titlecase_mappings + mirror_mappings
+    output = header + lookup + glyphs + uppercase_mappings + lowercase_mappings + titlecase_mappings + mirror_mappings
 
     print("Final size: {} bytes.\n\n".format(len(output)))
     

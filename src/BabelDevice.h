@@ -31,6 +31,7 @@
 
 struct BabelGlyph {
     uint32_t info;
+    uint16_t extendedInfo;
     uint8_t glyphData[32];
 };
 
@@ -88,7 +89,6 @@ private:
     uint8_t height = 0;
     uint32_t last_codepoint = 0;
     uint32_t location_of_lut = 0;
-    uint32_t location_of_meta = 0;
     uint32_t location_of_glyphs = 0;
     uint32_t location_of_extras = 0;
     uint32_t start_of_uppercase_mapping = 0;
@@ -100,6 +100,7 @@ private:
     uint32_t end_of_titlecase_mapping = 0;
     uint32_t end_of_mirrored_mapping = 0;
     uint32_t info_for_replacement_character = 0;
+    uint16_t extended_info_for_replacement_character = 0;
 };
 
 #endif /* BabelDevice_h */
