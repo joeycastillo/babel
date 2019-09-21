@@ -106,7 +106,10 @@ bool BabelDevice::fetch_glyph_data(uint32_t codepoint, BabelGlyph *glyph) {
     bool retVal = true;
     uint32_t loc = this->location_of_lut + codepoint * 6;
 
-    this->read(loc, glyph, 6);
+    // don't bother looking up out-of-range codepoints
+    if (codepoint > this->last_codepoint) glyph->info = 0;
+    else this->read(loc, glyph, 6);
+
     if (!glyph->info) {
         glyph->info = this->info_for_replacement_character;
         glyph->extendedInfo = this->extended_info_for_replacement_character;
