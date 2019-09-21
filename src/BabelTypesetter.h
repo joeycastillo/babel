@@ -77,7 +77,7 @@ public:
      @returns the number 1 if a codepoint was written, 0 if one was not.
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
     */
-    size_t writeCodepoint(uint32_t codepoint);
+    size_t writeCodepoint(BABEL_CODEPOINT codepoint);
 
     BabelDevice *glyphStorage = NULL;
     uint16_t textColor = 0;      ///< 16-bit background color for print()

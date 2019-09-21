@@ -63,8 +63,8 @@ int main(int argc, const char * argv[]) {
     BabelMockDevice babel = BabelMockDevice(argv[1]);
     BabelGlyph glyph;
     babel.begin();
-    uint32_t last_codepoint = babel.get_last_available_codepoint();
-    for (uint32_t codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
+    BABEL_CODEPOINT last_codepoint = babel.get_last_available_codepoint();
+    for (BABEL_CODEPOINT codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
         if (babel.fetch_glyph_data(codepoint, &glyph))
         {
             uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);

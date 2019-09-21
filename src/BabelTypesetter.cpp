@@ -124,7 +124,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     return width;
 }
 
-size_t BabelTypesetter::writeCodepoint(uint32_t codepoint) {
+size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
     // TODO: RTL handling, word wrap, combining marks, etc.
     BabelGlyph glyph;
     if(codepoint == '\n') {

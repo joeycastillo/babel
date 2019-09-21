@@ -80,11 +80,11 @@ void BabelDevice::begin() {
     this->extended_info_for_replacement_character = this->fetch_glyph_extended_info(0xFFFD);
 }
 
-uint32_t BabelDevice::get_last_available_codepoint() {
+BABEL_CODEPOINT BabelDevice::get_last_available_codepoint() {
     return this->last_codepoint;
 }
 
-uint32_t BabelDevice::fetch_glyph_basic_info(uint32_t codepoint) {
+uint32_t BabelDevice::fetch_glyph_basic_info(BABEL_CODEPOINT codepoint) {
     uint32_t retVal;
     uint32_t loc = this->location_of_lut + codepoint * 6;
 
@@ -93,7 +93,7 @@ uint32_t BabelDevice::fetch_glyph_basic_info(uint32_t codepoint) {
     return retVal;
 }
 
-uint16_t BabelDevice::fetch_glyph_extended_info(uint32_t codepoint) {
+uint16_t BabelDevice::fetch_glyph_extended_info(BABEL_CODEPOINT codepoint) {
     uint16_t retVal;
     uint32_t loc = 4 + this->location_of_lut + codepoint * 6;
 
@@ -102,7 +102,7 @@ uint16_t BabelDevice::fetch_glyph_extended_info(uint32_t codepoint) {
     return retVal;
 }
 
-bool BabelDevice::fetch_glyph_data(uint32_t codepoint, BabelGlyph *glyph) {
+bool BabelDevice::fetch_glyph_data(BABEL_CODEPOINT codepoint, BabelGlyph *glyph) {
     bool retVal = true;
     uint32_t loc = this->location_of_lut + codepoint * 6;
 

@@ -25,6 +25,13 @@
 #ifndef BabelMacros_h
 #define BabelMacros_h
 
+// If using only the basic multilingual plane, you can kind of get away with defining a codepoint as an unsigned 16 bit int.
+#ifdef USE_32_BIT_CODEPOINTS
+#define BABEL_CODEPOINT int32_t
+#else
+#define BABEL_CODEPOINT uint16_t
+#endif
+
 #define BABEL_INFO_GET_GLYPH_LOCATION(x) (x & 0x3FFFFF)
 #define BABEL_INFO_GET_GLYPH_WIDTH(x) ((x >> 22) & 0x1F)
 #define BABEL_INFO_GET_MARK_IS_COMBINING(x) (x & 0x8000000)

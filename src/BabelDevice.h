@@ -41,7 +41,7 @@ public:
     /**
      @brief Returns the last codepoint that is available on the device. Implementations should not request codepoints higher than this.
     */
-    uint32_t get_last_available_codepoint();
+    BABEL_CODEPOINT get_last_available_codepoint();
     
     /**
      @brief This method seeks into a lookup table for basic data about the glyph. O(1) access time.
@@ -57,7 +57,7 @@ public:
      @see BABEL_INFO_GET_CONTROL_CHARACTER
      @see BABEL_INFO_GET_LINEBREAK_OPPORTUNITY
     */
-    uint32_t fetch_glyph_basic_info(uint32_t codepoint);
+    uint32_t fetch_glyph_basic_info(BABEL_CODEPOINT codepoint);
     
     /**
      @brief This method seeks into a secondary lookup table for more detailed data about the glyph. O(1) access time.
@@ -72,7 +72,7 @@ public:
      @see BABEL_EXTENDED_GET_HAS_BIDI_MIRRORING_MAPPING
      @see BABEL_EXTENDED_GET_IS_WHITESPACE
     */
-    uint16_t fetch_glyph_extended_info(uint32_t codepoint);
+    uint16_t fetch_glyph_extended_info(BABEL_CODEPOINT codepoint);
     
     /**
      @brief This method first calls fetch_glyph_basic_info to populate the struct's info field, which includes the glyph data's location. It then seeks to that location and populates the struct's glyphData field with the glyph bitmap.
@@ -81,7 +81,7 @@ public:
      @param glyph Output parameter, the struct you wish to populate with data.
      @note If the glyph is only 16 bytes, this method will populate the first 16 bytes of glyphData, and leave the rest alone. In this case, you can expect a width value in info that is <= 8.
     */
-    bool fetch_glyph_data(uint32_t codepoint, BabelGlyph *glyph);
+    bool fetch_glyph_data(BABEL_CODEPOINT codepoint, BabelGlyph *glyph);
 protected:
     virtual void read(uint32_t addr, void *data, uint32_t len) = 0;
 private:
