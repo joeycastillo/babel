@@ -28,7 +28,12 @@ This still leaves just over 26 kilobytes at the end, for more mappings or other 
 
 ## Next Steps
 
-- [ ] Create a subclass of Babel that can draw text to a GFX display.
+- [X] Create a subclass of Babel that can draw text to a GFX display.
+  - [ ] Handle screen size and margins, clipping
+  - [ ] Handle character wrapping
+  - [ ] Handle RTL direction changes
+  - [ ] Handle combining marks
+  - [ ] Glyph magnification (i.e. size=2)
 - [ ] String manipulation (uppercase, lowercase, capitalization, word wrap)
 - [ ] Make a simple FeatherWing with the chip, for easier testing on more devices.
 - [ ] Port to CircuitPython!

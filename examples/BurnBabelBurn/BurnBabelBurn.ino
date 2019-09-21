@@ -73,7 +73,7 @@ void loop(void) {
      // open the file. note that only one file can be open at a time,
      // so you have to close this one before opening another.
      // Open up the file we're going to log to!
-     dataFile = sd.open("babel.bin", FILE_WRITE);
+     dataFile = sd.open("flshdump.bin", FILE_WRITE);
      if (! dataFile) {
        error("error opening flshdump.bin");
      }
@@ -96,9 +96,9 @@ void loop(void) {
 
   }
   if (cmd == 'V') {
-     dataFile = sd.open("flshdump.bin", FILE_READ);
+     dataFile = sd.open("babel.bin", FILE_READ);
      if (! dataFile) {
-       error("error opening flshdump.bin");
+       error("error opening babel.bin");
      }
     Serial.println("Verifying FLASH from disk");
     for (int32_t page=0; page < flash.numPages() ; page++)  {
@@ -128,9 +128,9 @@ void loop(void) {
   }
 
   if (cmd == 'W') {
-     dataFile = sd.open("flshdump.bin", FILE_READ);
+     dataFile = sd.open("babel.bin", FILE_READ);
      if (! dataFile) {
-       error("error opening flshdump.bin");
+       error("error opening babel.bin");
      }
 
     Serial.println("Writing FLASH from disk");

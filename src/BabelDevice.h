@@ -36,7 +36,7 @@ struct BabelGlyph {
 
 class BabelDevice {
 public:
-    void begin();
+    virtual void begin();
     /**
      @brief Returns the last codepoint that is available on the device. Implementations should not request codepoints higher than this.
     */

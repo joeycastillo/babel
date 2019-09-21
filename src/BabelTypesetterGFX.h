@@ -2,6 +2,8 @@
  * The MIT License (MIT)
  *
  * Copyright © 2019 Joey Castillo. All rights reserved.
+ * Incorporates ideas and code from the Adafruit_GFX library.
+ * Copyright (c) 2013 Adafruit Industries.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +24,29 @@
  * THE SOFTWARE.
  */
 
-#ifndef BabelSPIFlash_h
-#define BabelSPIFlash_h
+#ifndef BabelTypesetterGFX_h
+#define BabelTypesetterGFX_h
 
 #include <stdio.h>
-#include "SPI.h"
-#include "BabelDevice.h"
+#include <stdint.h>
+#include "Adafruit_GFX.h"
+#include "BabelTypesetter.h"
+#include "BabelSPIFlash.h"
 
-class BabelSPIFlash: public BabelDevice {
+class BabelTypesetterGFX: public BabelTypesetter {
 public:
-    BabelSPIFlash(uint8_t cs, SPIClass *spi);
+    BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *spi);
     void begin();
-    void read(uint32_t addr, void *data, uint32_t len);
+    /**
+     @brief Pure virtual method for drawing a pixel. All glyph drawing methods call this to push pixels.
+     @param x pixel's X coordinate
+     @param y pixel's Y coordinate
+     @param color 16-bit pixel color
+    */
+    void drawPixel(int16_t x, int16_t y, uint16_t color);
+    void drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 private:
-    uint8_t cs;
-    SPIClass *spi;
-    SPISettings settings;
-
-    void read(uint32_t addr, uint8_t *data, uint32_t len);
-    bool runCommand(uint8_t command);
-    bool readCommand(uint8_t command, uint8_t* response, uint32_t len);
-    uint8_t readStatus();
-    uint8_t readStatus2();
+    Adafruit_GFX *gfx;
 };
 
-#endif /* BabelSPIFlash_h */
+#endif /* BabelTypesetterGFX_h */
