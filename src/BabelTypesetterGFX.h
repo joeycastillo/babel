@@ -37,12 +37,6 @@ class BabelTypesetterGFX: public BabelTypesetter {
 public:
     BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *spi);
     void begin();
-    /**
-     @brief Pure virtual method for drawing a pixel. All glyph drawing methods call this to push pixels.
-     @param x pixel's X coordinate
-     @param y pixel's Y coordinate
-     @param color 16-bit pixel color
-    */
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 private:

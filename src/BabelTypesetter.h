@@ -45,8 +45,10 @@ public:
 
     /**
      @brief Virtual method for drawing a rect. You may override this if you have a more efficient implementation.
-     @param x pixel's X coordinate
-     @param y pixel's Y coordinate
+     @param x origin X coordinate
+     @param y origin Y coordinate
+     @param w rect width
+     @param h rect height
      @param color 16-bit pixel color
     */
     virtual void drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
@@ -65,17 +67,13 @@ public:
      @param y Y coordinate of the glyph.
      @param glyph The glyph you wish to draw.
      @param color 16-bit pixel color
-     @param size Font magnification level, 1 is 'original' size
+     @returns the width of the glyph that was drawn. Can be zero.
      @note This method simply draws the glyph; it does not touch layout direction or cursor position.
     */
     int drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color);
     /**
      @brief Writes a glyph at the current cursor position
-     @param x X coordinate of the glyph.
-     @param y Y coordinate of the glyph.
      @param codepoint The codepoint you wish to draw. Not UTF-8. Not UTF-16. The codepoint itself.
-     @param color 16-bit pixel color
-     @param bg 16-bit pixel background color (NOTE: probably refactoring this out)
      @returns the number 1 if a codepoint was written, 0 if one was not.
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
     */
