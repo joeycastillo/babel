@@ -28,6 +28,8 @@
 
 using namespace std;
 
+BabelMockDevice *babel;
+
 void drawGlyph(BabelGlyph glyph) {
     uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     if (width == 8) {
@@ -55,17 +57,11 @@ void drawGlyph(BabelGlyph glyph) {
     }
 }
 
-int main(int argc, const char * argv[]) {
-    if (argc != 2) {
-        cout << "Usage: BabelTest /path/to/babel.bin" << endl;
-        exit(1);
-    }
-    BabelMockDevice babel = BabelMockDevice(argv[1]);
+int dumpEverythingTest() {
     BabelGlyph glyph;
-    babel.begin();
-    BABEL_CODEPOINT last_codepoint = babel.get_last_available_codepoint();
+    BABEL_CODEPOINT last_codepoint = babel->get_last_available_codepoint();
     for (BABEL_CODEPOINT codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
-        if (babel.fetch_glyph_data(codepoint, &glyph))
+        if (babel->fetch_glyph_data(codepoint, &glyph))
         {
             uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
             drawGlyph(glyph);
@@ -248,4 +244,16 @@ int main(int argc, const char * argv[]) {
         cout << endl << endl;
     }
     return 0;
+}
+
+
+int main(int argc, const char * argv[]) {
+    if (argc != 2) {
+        cout << "Usage: BabelTest /path/to/babel->bin" << endl;
+        exit(1);
+    }
+    babel = new BabelMockDevice(argv[1]);
+    babel->begin();
+
+    return dumpEverythingTest();
 }
