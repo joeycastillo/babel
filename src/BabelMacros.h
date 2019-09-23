@@ -25,6 +25,8 @@
 #ifndef BabelMacros_h
 #define BabelMacros_h
 
+#include <stdint.h>
+
 // If using only the basic multilingual plane, you can kind of get away with defining a codepoint as an unsigned 16 bit int.
 #ifdef USE_32_BIT_CODEPOINTS
 #define BABEL_CODEPOINT int32_t

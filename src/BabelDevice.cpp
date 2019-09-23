@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include "BabelDevice.h"
+#include "utf8_decode.h"
 
 #define BABEL_HEADER_LOC_RESERVED 0
 #define BABEL_HEADER_LOC_VERSION 2
@@ -125,4 +126,25 @@ bool BabelDevice::fetch_glyph_data(BABEL_CODEPOINT codepoint, BabelGlyph *glyph)
         this->read(loc, &glyph->glyphData, 16);
         return retVal;
     }
+}
+
+size_t BabelDevice::utf8_codepoint_length(char string[]) {
+    return this->utf8_parse(string, NULL);
+}
+
+size_t BabelDevice::utf8_parse(char * string, BABEL_CODEPOINT *buf) {
+    utf8_decode_init(string, strlen(string));
+    size_t len = 0;
+    
+    do
+    {
+        int c = utf8_decode_next();
+        if (c == UTF8_END) break;
+        else if (c == UTF8_ERROR) return -1;
+        
+        if (buf != NULL) buf[len++] = (uint16_t)c;
+        else len++;
+    } while (1);
+    
+    return len;
 }

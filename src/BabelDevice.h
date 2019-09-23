@@ -45,7 +45,7 @@ public:
     
     /**
      @brief This method seeks into a lookup table for basic data about the glyph. O(1) access time.
-     @returns A uint32_t that contains the glyph's location on the device in the lower 22 bits, and some basic metadata in the higher 10 bits.
+     @return A uint32_t that contains the glyph's location on the device in the lower 22 bits, and some basic metadata in the higher 10 bits.
      @param codepoint The codepoint whose basic data you want to fetch.
      @note The macros in BabelMacros.h help to get the desired data out of this value.
      @see BABEL_INFO_GET_GLYPH_LOCATION
@@ -76,12 +76,27 @@ public:
     
     /**
      @brief This method first calls fetch_glyph_basic_info to populate the struct's info field, which includes the glyph data's location. It then seeks to that location and populates the struct's glyphData field with the glyph bitmap.
-     @returns true if the codepoint was valid; false if it was invalid. If false, the glyph struct will contain data and graphics for codepoint U+FFFD "REPLACEMENT CHARACTER"
+     @return true if the codepoint was valid; false if it was invalid. If false, the glyph struct will contain data and graphics for codepoint U+FFFD "REPLACEMENT CHARACTER"
      @param codepoint The codepoint whose data you want to fetch.
      @param glyph Output parameter, the struct you wish to populate with data.
      @note If the glyph is only 16 bytes, this method will populate the first 16 bytes of glyphData, and leave the rest alone. In this case, you can expect a width value in info that is <= 8.
-    */
+     */
     bool fetch_glyph_data(BABEL_CODEPOINT codepoint, BabelGlyph *glyph);
+    
+    /**
+     @brief This method takes a NULL-terminated UTF-8 string and returns its length in BABEL_CODEPOINTS. Should be O(n) time.
+     @return the number of codepoints required to represent this string, or 0 if the string was invalid.
+     @param string a pointer to a a UTF-8 string
+     */
+    size_t utf8_codepoint_length(char * string);
+
+    /**
+     @brief This method takes a NULL-terminated UTF-8 string and parses it into codepoints, which it places in the buffer pointed to by buf. O(N) time.
+     @return the number of codepoints required to represent this string, or 0 if the string was invalid.
+     @param string a pointer to a a UTF-8 string
+     @param buf output parameter, a pointer to a buffer that will receive the parsed codepoints.
+     */
+    size_t utf8_parse(char * string, BABEL_CODEPOINT *buf);
 protected:
     virtual void read(uint32_t addr, void *data, uint32_t len) = 0;
 private:

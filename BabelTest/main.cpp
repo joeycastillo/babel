@@ -57,7 +57,7 @@ void drawGlyph(BabelGlyph glyph) {
     }
 }
 
-int dumpEverythingTest() {
+void dumpEverythingTest() {
     BabelGlyph glyph;
     BABEL_CODEPOINT last_codepoint = babel->get_last_available_codepoint();
     for (BABEL_CODEPOINT codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
@@ -243,9 +243,21 @@ int dumpEverythingTest() {
         }
         cout << endl << endl;
     }
-    return 0;
 }
 
+void utf8ParsingTest() {
+    char utf8String[] = "Voici mon secret. Il est très simple: on ne voit bien qu'avec le cœur. L'essentiel est invisible pour les yeux.";
+    size_t len = babel->utf8_codepoint_length(utf8String);
+    BABEL_CODEPOINT *buf = (BABEL_CODEPOINT *)malloc(len * sizeof(BABEL_CODEPOINT));
+    babel->utf8_parse(utf8String, buf);
+    cout << strlen(utf8String) << endl;
+    cout << len << endl;
+    BabelGlyph glyph;
+    for (int i = 0; i < len; i++) {
+        babel->fetch_glyph_data(buf[i], &glyph);
+        drawGlyph(glyph);
+    }
+}
 
 int main(int argc, const char * argv[]) {
     if (argc != 2) {
@@ -254,6 +266,8 @@ int main(int argc, const char * argv[]) {
     }
     babel = new BabelMockDevice(argv[1]);
     babel->begin();
-
-    return dumpEverythingTest();
+    
+    utf8ParsingTest();
+    
+    return 0;
 }
