@@ -148,3 +148,68 @@ size_t BabelDevice::utf8_parse(char * string, BABEL_CODEPOINT *buf) {
     
     return len;
 }
+
+void BabelDevice::to_uppercase(BABEL_CODEPOINT *buf, size_t len) {
+    for (int i = 0; i < len; i++) {
+        uint16_t extendedInfo = this->fetch_glyph_extended_info(buf[i]);
+        if (BABEL_EXTENDED_GET_HAS_UPPERCASE_MAPPING(extendedInfo)) {
+            BABEL_CODEPOINT uppercaseCodepoint = this->uppercase_mapping_for_codepoint(buf[i]);
+            buf[i] = uppercaseCodepoint;
+        }
+    }
+}
+
+void BabelDevice::to_lowercase(BABEL_CODEPOINT *buf, size_t len) {
+    for (int i = 0; i < len; i++) {
+        uint16_t extendedInfo = this->fetch_glyph_extended_info(buf[i]);
+        if (BABEL_EXTENDED_GET_HAS_LOWERCASE_MAPPING(extendedInfo)) {
+            BABEL_CODEPOINT lowercaseCodepoint = this->lowercase_mapping_for_codepoint(buf[i]);
+            buf[i] = lowercaseCodepoint;
+        }
+    }
+}
+
+int16_t BabelDevice::search_mapping(uint32_t start_of_mapping, uint32_t first, uint32_t last, BABEL_CODEPOINT key) {
+    uint32_t retVal;
+    if (first > last) {
+        retVal = -1;
+    } else {
+        uint32_t mid = (first + last)/2;
+        BABEL_MAPPING mapping;
+        this->read(start_of_mapping + mid * sizeof(BABEL_MAPPING), &mapping, sizeof(BABEL_MAPPING));
+        BABEL_CODEPOINT current_key = BABEL_MAPPING_GET_KEY(mapping);
+        if (current_key == key) {
+            retVal = mid;
+        } else {
+            if (key < current_key) {
+                retVal = this->search_mapping(start_of_mapping, first, mid - 1, key);
+            } else {
+                retVal = this->search_mapping(start_of_mapping, mid + 1, last, key);
+            }
+        }
+    }
+
+    return retVal;
+}
+
+BABEL_CODEPOINT BabelDevice::uppercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint) {
+    uint32_t lastIndex = (this->end_of_uppercase_mapping - this->start_of_uppercase_mapping) / sizeof(BABEL_MAPPING);
+    int16_t index_of_result = search_mapping(this->start_of_uppercase_mapping, 0, lastIndex, codepoint);
+
+    if (index_of_result == -1) return codepoint;
+    BABEL_MAPPING mapping;
+    this->read(this->start_of_uppercase_mapping + index_of_result * sizeof(BABEL_MAPPING), &mapping, sizeof(BABEL_MAPPING));
+
+    return BABEL_MAPPING_GET_VALUE(mapping);
+}
+
+BABEL_CODEPOINT BabelDevice::lowercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint) {
+    uint32_t lastIndex = (this->end_of_lowercase_mapping - this->start_of_lowercase_mapping) / sizeof(BABEL_MAPPING);
+    int16_t index_of_result = search_mapping(this->start_of_lowercase_mapping, 0, lastIndex, codepoint);
+
+    if (index_of_result == -1) return codepoint;
+    BABEL_MAPPING mapping;
+    this->read(this->start_of_lowercase_mapping + index_of_result * sizeof(BABEL_MAPPING), &mapping, sizeof(BABEL_MAPPING));
+
+    return BABEL_MAPPING_GET_VALUE(mapping);
+}

@@ -30,8 +30,14 @@
 // If using only the basic multilingual plane, you can kind of get away with defining a codepoint as an unsigned 16 bit int.
 #ifdef USE_32_BIT_CODEPOINTS
 #define BABEL_CODEPOINT int32_t
+#define BABEL_MAPPING int64_t
+#define BABEL_MAPPING_GET_KEY(x) (x & 0xFFFFFFFF)
+#define BABEL_MAPPING_GET_VALUE(x) (x >> 32)
 #else
 #define BABEL_CODEPOINT uint16_t
+#define BABEL_MAPPING uint32_t
+#define BABEL_MAPPING_GET_KEY(x) (x & 0xFFFF)
+#define BABEL_MAPPING_GET_VALUE(x) (x >> 16)
 #endif
 
 #define BABEL_INFO_GET_GLYPH_LOCATION(x) (x & 0x3FFFFF)

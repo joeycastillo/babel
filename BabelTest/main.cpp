@@ -29,6 +29,7 @@
 using namespace std;
 
 BabelMockDevice *babel;
+BabelGlyph glyph;
 
 void drawGlyph(BabelGlyph glyph) {
     uint32_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
@@ -58,7 +59,6 @@ void drawGlyph(BabelGlyph glyph) {
 }
 
 void dumpEverythingTest() {
-    BabelGlyph glyph;
     BABEL_CODEPOINT last_codepoint = babel->get_last_available_codepoint();
     for (BABEL_CODEPOINT codepoint = 0x0000; codepoint <= last_codepoint; codepoint++) {
         if (babel->fetch_glyph_data(codepoint, &glyph))
@@ -252,7 +252,14 @@ void utf8ParsingTest() {
     babel->utf8_parse(utf8String, buf);
     cout << strlen(utf8String) << endl;
     cout << len << endl;
-    BabelGlyph glyph;
+
+    babel->to_uppercase(buf, len);
+    for (int i = 0; i < len; i++) {
+        babel->fetch_glyph_data(buf[i], &glyph);
+        drawGlyph(glyph);
+    }
+
+    babel->to_lowercase(buf, len);
     for (int i = 0; i < len; i++) {
         babel->fetch_glyph_data(buf[i], &glyph);
         drawGlyph(glyph);
@@ -266,8 +273,6 @@ int main(int argc, const char * argv[]) {
     }
     babel = new BabelMockDevice(argv[1]);
     babel->begin();
-    
     utf8ParsingTest();
-    
     return 0;
 }

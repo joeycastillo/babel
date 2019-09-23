@@ -34,6 +34,10 @@ This still leaves just over 26 kilobytes at the end, for more mappings or other 
   - [ ] Handle RTL direction changes
   - [ ] Handle combining marks
   - [ ] Glyph magnification (i.e. size=2)
-- [ ] String manipulation (uppercase, lowercase, capitalization, word wrap)
-- [ ] Make a simple FeatherWing with the chip, for easier testing on more devices.
+- [ ] String manipulation
+  - [X] Uppercase
+  - [X] Lowercase
+  - [ ] Capitalization
+  - [ ] Word wrap
+- [ ] Make a [simple FeatherWing with the chip](https://github.com/joeycastillo/Feather-Projects/tree/master/Experiments), for easier testing on more devices. 
 - [ ] Port to CircuitPython!

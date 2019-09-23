@@ -97,8 +97,42 @@ public:
      @param buf output parameter, a pointer to a buffer that will receive the parsed codepoints.
      */
     size_t utf8_parse(char * string, BABEL_CODEPOINT *buf);
+
+    /**
+     @brief This method takes an array of codepoints, and modifies it so that all the characters are uppercase. O(n log(m)) where n is the length of the string, and m is the number of uppercase mappings on the device.
+     @param buf the array of codepoints to modify in-place.
+     @param len the length of the buffer
+     @note This method only handles one-to-one mappings. Some single lowercase characters should capitalize to multuple codepoints (i.e. the german "ß" U+00DF should become "SS", U+0053 U+0053) but this method does not handle these cases.
+     */
+    void to_uppercase(BABEL_CODEPOINT *buf, size_t len);
+
+    /**
+     @brief This method takes an array of codepoints, and modifies it so that all the characters are lowercase. O(n log(m)) where n is the length of the string, and m is the number of lowercase mappings on the device.
+     @param buf the array of codepoints to modify in-place.
+     @param len the length of the buffer
+     */
+    void to_lowercase(BABEL_CODEPOINT *buf, size_t len);
+
+    /**
+     @brief This method locates the mapping to uppercase for a given codepoint. O(log(n)) where n is the number of uppercase mappings on the device.
+     @param codepoint the codepoint whose uppercase mapping you are seeking
+     @return the codepoint that the provided codepoint should map to. If no mapping was found, the same codepoint that was passed in.
+     @see BABEL_EXTENDED_GET_HAS_UPPERCASE_MAPPING
+     @note This is a relatively expensive method to call, especially if the character in question has no uppercase mapping. You should first check the extended metadata to determine if a mapping is available, and only call this method if you are certain that one exists.
+     */
+    BABEL_CODEPOINT uppercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint);
+
+    /**
+     @brief This method locates the mapping to lowercase for a given codepoint. O(log(n)) where n is the number of lower mappings on the device.
+     @param codepoint the codepoint whose lowercase mapping you are seeking
+     @return the codepoint that the provided codepoint should map to. If no mapping was found, the same codepoint that was passed in.
+     @see BABEL_EXTENDED_GET_HAS_LOWERCASE_MAPPING
+     @note This is a relatively expensive method to call, especially if the character in question has no lowercase mapping. You should first check the extended metadata to determine if a mapping is available, and only call this method if you are certain that one exists.
+     */
+    BABEL_CODEPOINT lowercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint);
 protected:
     virtual void read(uint32_t addr, void *data, uint32_t len) = 0;
+    int16_t search_mapping(uint32_t start_of_mapping, uint32_t first, uint32_t last, BABEL_CODEPOINT key);
 private:
     uint8_t width = 0;
     uint8_t height = 0;
