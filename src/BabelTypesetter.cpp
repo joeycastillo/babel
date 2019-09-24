@@ -57,62 +57,46 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
     bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
 
-    if (mirrored)
-    {
-        switch (characterWidth)
-        {
+    if (mirrored) {
+        switch (characterWidth) {
             case 1:
-                for(int8_t i=0; i<characterWidth*16; i++ )
-                {
+                for(int8_t i=0; i<characterWidth*16; i++ ) {
                     uint8_t line = glyph.glyphData[i];
-                    for(int8_t j=7; j>= 0; j--, line >>= 1)
-                    {
-                        if(line & 1)
-                        {
+                    for(int8_t j=7; j>= 0; j--, line >>= 1) {
+                        if(line & 1) {
                             drawPixel(x+8-j, y+i, color);
                         }
                     }
                 }
                 break;
             case 2:
-                for(int8_t i=0; i<characterWidth*16; i++ )
-                {
+                for(int8_t i=0; i<characterWidth*16; i++ ) {
                     uint8_t line = glyph.glyphData[i];
-                    for(int8_t j=7; j>= 0; j--, line >>= 1)
-                    {
-                        if(line & 1)
-                        {
+                    for(int8_t j=7; j>= 0; j--, line >>= 1) {
+                        if(line & 1) {
                             drawPixel(x+8-(j+(i%2?8:0)), y+i/2, color);
                         }
                     }
                 }
                 break;
         }
-    } else
-    {
-        switch (characterWidth)
-        {
+    } else {
+        switch (characterWidth) {
             case 1:
-                for(int8_t i=0; i<characterWidth*16; i++ )
-                {
+                for(int8_t i=0; i<characterWidth*16; i++ ) {
                     uint8_t line = glyph.glyphData[i];
-                    for(int8_t j=7; j>= 0; j--, line >>= 1)
-                    {
-                        if(line & 1)
-                        {
+                    for(int8_t j=7; j>= 0; j--, line >>= 1) {
+                        if(line & 1) {
                             drawPixel(x+j, y+i, color);
                         }
                     }
                 }
                 break;
             case 2:
-                for(int8_t i=0; i<characterWidth*16; i++ )
-                {
+                for(int8_t i=0; i<characterWidth*16; i++ ) {
                     uint8_t line = glyph.glyphData[i];
-                    for(int8_t j=7; j>= 0; j--, line >>= 1)
-                    {
-                        if(line & 1)
-                        {
+                    for(int8_t j=7; j>= 0; j--, line >>= 1) {
+                        if(line & 1) {
                             drawPixel(x+j+(i%2?8:0), y+i/2, color);
                         }
                     }
