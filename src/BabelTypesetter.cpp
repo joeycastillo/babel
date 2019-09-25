@@ -52,7 +52,7 @@ void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, u
     }
 }
 
-int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color) {
+int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size) {
     uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
     bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
@@ -64,7 +64,8 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
-                            drawPixel(x+8-j, y+i, color);
+                            if(size == 1) drawPixel(x+8-j, y+i, color);
+                            else drawFillRect(x+8*size-j*size, y+i*size, size, size, color);
                         }
                     }
                 }
@@ -74,7 +75,8 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
-                            drawPixel(x+8-(j+(i%2?8:0)), y+i/2, color);
+                            if(size == 1) drawPixel(x+8-(j+(i%2?8:0)), y+i/2, color);
+                            else drawFillRect(x+8*size-(j+(i%2?8:0))*size, y+(i/2)*size, size, size, color);
                         }
                     }
                 }
@@ -87,7 +89,8 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
-                            drawPixel(x+j, y+i, color);
+                            if(size == 1) drawPixel(x+j, y+i, color);
+                            else drawFillRect(x+j*size, y+i*size, size, size, color);
                         }
                     }
                 }
@@ -97,7 +100,8 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
-                            drawPixel(x+j+(i%2?8:0), y+i/2, color);
+                            if(size == 1) drawPixel(x+j+(i%2?8:0), y+i/2, color);
+                            else drawFillRect(x+(j+(i%2?8:0))*size, y+(i/2)*size, size, size, color);
                         }
                     }
                 }
@@ -105,7 +109,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
         }
     }
 
-    return width;
+    return width * this->textSize;
 }
 
 size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
@@ -113,14 +117,14 @@ size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
     BabelGlyph glyph;
     if(codepoint == '\n') {
         this->cursor_x = 0; // (this->direction == 1) ? 0 : (this->_width - 8);
-        this->cursor_y += 16;
+        this->cursor_y += 16 * this->textSize;
     } else if(codepoint == '\r') {
         return 0;
     } else if (this->glyphStorage->fetch_glyph_data(codepoint, &glyph)) {
         int width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
         // word wrap should go here
         int xPos = (this->cursor_x + width * this->direction);
-        int advance = drawGlyph(this->cursor_x, this->cursor_y, glyph, this->textColor);
+        int advance = drawGlyph(this->cursor_x, this->cursor_y, glyph, this->textColor, this->textSize);
         this->cursor_x += advance * this->direction;    // Advance x one char
         
         return 1;

@@ -70,7 +70,7 @@ public:
      @returns the width of the glyph that was drawn. Can be zero.
      @note This method simply draws the glyph; it does not touch layout direction or cursor position.
     */
-    int drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color);
+    int drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size);
     /**
      @brief Writes a glyph at the current cursor position
      @param codepoint The codepoint you wish to draw. Not UTF-8. Not UTF-16. The codepoint itself.
@@ -81,6 +81,7 @@ public:
 
     BabelDevice *glyphStorage = NULL;
     uint16_t textColor = 0;      ///< 16-bit background color for print()
+    uint16_t textSize = 1;      ///< 16-bit background color for print()
 protected:
     int16_t cursor_x = 0;       ///< x location to start print()ing text
     int16_t cursor_y = 0;       ///< y location to start print()ing text

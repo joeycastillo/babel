@@ -27,8 +27,13 @@ void loop() {
   Serial.println("clearing");
   display.fillScreen(GxEPD_WHITE);
   for (int block = 0; block <= 0xFF00; block += 0x100) {
+    Serial.print("dumping block ");
+    Serial.println(block >> 8);
     for (int i = 0; i <= 0xFF; i++) {
-      if ((i % 16 == 0) && i > 0) typesetter.writeCodepoint('\n');
+      if ((i % 16 == 0) && i > 0) {
+        typesetter.writeCodepoint('\n');
+        typesetter.textSize = ((i / 16) % 5) + 1;
+      }
       typesetter.writeCodepoint(block | i);
     }
     while (display.nextPage());
