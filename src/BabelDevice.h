@@ -50,7 +50,7 @@ public:
      @note The macros in BabelMacros.h help to get the desired data out of this value.
      @see BABEL_INFO_GET_GLYPH_LOCATION
      @see BABEL_INFO_GET_GLYPH_WIDTH
-     @see BABEL_INFO_GET_MARK_IS_COMBINING
+     @see BABEL_INFO_GET_MARK_IS_NON_SPACING
      @see BABEL_INFO_GET_MIRRORED_IN_RTL
      @see BABEL_INFO_GET_STRONG_RTL
      @see BABEL_INFO_GET_STRONG_LTR

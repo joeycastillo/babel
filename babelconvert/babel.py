@@ -8,7 +8,6 @@ class CodepointInfo:
         self.bidiClass = 0
         self.isValid = False
         self.isNSM  = False
-        self.isCombining  = False
         self.isRTL  = False
         self.isLTR  = False
         self.isMirrored = False
@@ -103,7 +102,6 @@ for line in open('UnicodeData.txt', 'r'):
         info.titlecaseMapping = line[14]
     info.mirrorMapping = None
     info.isNSM = general_category in ["Mn", "Mc", "Me"] or bidi_class in ["NSM", "RNSM"]
-    info.isCombining = general_category in ["Mc", "Me"]
     info.isLTR = bidi_class in ["L", "LRE", "LRO", "LRI"]
     info.isRTL = bidi_class in ["R", "AL", "RLE", "RLO", "RLI", "RNSM"]
     info.isMirrored = bidi_mirrored == "Y"
@@ -270,11 +268,11 @@ def generate_unifont_bin():
             # C - Control character, do not draw
             # B - Whitespace or other line-breaking character. If word wrapping, you can wrap on this.
             lookup_entry = current_position
-            if len(glyphdata) == 16 and not character.isNSM:
+            if len(glyphdata) == 16:
                 lookup_entry |= 0b00000010000000000000000000000000
-            if len(glyphdata) == 32 and not character.isNSM:
+            if len(glyphdata) == 32:
                 lookup_entry |= 0b00000100000000000000000000000000
-            if character.isCombining:
+            if character.isNSM:
                 lookup_entry |= 0b00001000000000000000000000000000
             if character.isRTL:
                 lookup_entry |= 0b00010000000000000000000000000000

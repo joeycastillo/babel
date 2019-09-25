@@ -69,7 +69,7 @@ void dumpEverythingTest() {
             bitset<32> x(glyph.info);
             cout << "basic info " << hex << glyph.info << " - " << x << endl;
             if (BABEL_INFO_GET_CONTROL_CHARACTER(glyph.info)) cout << "It is a control character." << endl;
-            if (BABEL_INFO_GET_MARK_IS_COMBINING(glyph.info)) cout << "It is a combining or enclosing mark." << endl;
+            if (BABEL_INFO_GET_MARK_IS_NON_SPACING(glyph.info)) cout << "It is a combining or enclosing mark." << endl;
             if (BABEL_INFO_GET_LINEBREAK_OPPORTUNITY(glyph.info)) cout << "You can break after this character." << endl;
             if (BABEL_INFO_GET_STRONG_LTR(glyph.info)) cout << "It has a strong LTR affinity." << endl;
             else if (BABEL_INFO_GET_STRONG_RTL(glyph.info)) cout << "It has a strong LTR affinity." << endl;

@@ -42,7 +42,7 @@
 
 #define BABEL_INFO_GET_GLYPH_LOCATION(x) (x & 0x3FFFFF)
 #define BABEL_INFO_GET_GLYPH_WIDTH(x) ((x >> 22) & 0x1F)
-#define BABEL_INFO_GET_MARK_IS_COMBINING(x) (x & 0x8000000)
+#define BABEL_INFO_GET_MARK_IS_NON_SPACING(x) (x & 0x8000000)
 #define BABEL_INFO_GET_MIRRORED_IN_RTL(x) (__builtin_popcount(x & 0x30000000) == 2)
 #define BABEL_INFO_GET_STRONG_RTL(x) ((x & 0x10000000) && (__builtin_popcount(x & 0x30000000) == 1))
 #define BABEL_INFO_GET_STRONG_LTR(x) ((x & 0x20000000) && (__builtin_popcount(x & 0x30000000) == 1))

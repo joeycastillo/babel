@@ -40,8 +40,8 @@ void BabelTypesetter::begin() {
 }
 
 void BabelTypesetter::setCursor(int16_t x, int16_t y) {
-    this->cursor_x = x;
-    this->cursor_y = y;
+    this->cursor.x = x;
+    this->cursor.y = y;
 }
 
 void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -56,6 +56,8 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
     bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
+    
+    // TODO: if in RTL mode, AND at maxX, scoot cursor leftward by the width of the glyph?
 
     if (mirrored) {
         switch (characterWidth) {
@@ -113,22 +115,44 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
 }
 
 size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
-    // TODO: RTL handling, word wrap, combining marks, etc.
+    // TODO: RTL handling, word wrap, etc.
     BabelGlyph glyph;
     if(codepoint == '\n') {
-        this->cursor_x = 0; // (this->direction == 1) ? 0 : (this->_width - 8);
-        this->cursor_y += 16 * this->textSize;
+        this->cursor.x = 0;
+        this->cursor.y += 16 * this->textSize;
+        this->hasLastGlyph = false;
     } else if(codepoint == '\r') {
+        this->hasLastGlyph = false;
         return 0;
     } else if (this->glyphStorage->fetch_glyph_data(codepoint, &glyph)) {
-        int width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
         // word wrap should go here
-        int xPos = (this->cursor_x + width * this->direction);
-        int advance = drawGlyph(this->cursor_x, this->cursor_y, glyph, this->textColor, this->textSize);
-        this->cursor_x += advance * this->direction;    // Advance x one char
+        int advance;
+        if (BABEL_INFO_GET_MARK_IS_NON_SPACING(glyph.info) && this->hasLastGlyph) {
+            // Draw over the last glyph, and do not add to advance
+            drawGlyph(this->lastGlyphPosition.x, this->lastGlyphPosition.y, glyph, this->textColor, this->textSize);
+        } else {
+            // stash current cursor position
+            this->hasLastGlyph = true;
+            this->lastGlyphPosition = this->cursor;
+            // draw glyph
+            int advance = drawGlyph(this->cursor.x, this->cursor.y, glyph, this->textColor, this->textSize);
+            // advance cursor
+            this->cursor.x += advance * this->direction;
+        }
         
         return 1;
     }
 
     return 0;
+}
+
+size_t BabelTypesetter::writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len) {
+    size_t retVal = 0;
+
+    this->hasLastGlyph = false;
+    for(size_t i = 0; i < len; i++) {
+        retVal += this->writeCodepoint(codepoints[i]);
+    }
+
+    return retVal;
 }

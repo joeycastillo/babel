@@ -33,6 +33,11 @@
 
 class BabelTypesetter {
 public:
+    struct Point {
+        int16_t x = 0;
+        int16_t y = 0;
+    };
+
     BabelTypesetter();
     virtual void begin();
     /**
@@ -78,15 +83,27 @@ public:
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
     */
     size_t writeCodepoint(BABEL_CODEPOINT codepoint);
+    /**
+     @brief Writes a series of glyphs at the current cursor position. It will not currently wrap, but will advance the line for newlines, and automatically change the layout mode to RTL or LTR as appropriate.
+     @param codepoints An array of codepoints that you wish to draw
+     @param len The number of codepoints in the array
+     @returns the number 1 if a codepoint was written, 0 if one was not.
+     @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
+    */
+    size_t writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len);
 
+    // TODO: make these protected, add accessors where it makes sense
     BabelDevice *glyphStorage = NULL;
-    uint16_t textColor = 0;      ///< 16-bit background color for print()
-    uint16_t textSize = 1;      ///< 16-bit background color for print()
+    uint16_t textColor = 0;
+    uint16_t textSize = 1;
 protected:
-    int16_t cursor_x = 0;       ///< x location to start print()ing text
-    int16_t cursor_y = 0;       ///< y location to start print()ing text
+    Point cursor;
 private:
-    int8_t  direction = 1; ///< 1 for LTR, -1 for RTL.
+    // layout direction. 1 for LTR, -1 for RTL.
+    int8_t  direction = 1;
+    // these next two are for combining and enclosing marks, which should be drawn atop the previously drawn glyph.
+    bool hasLastGlyph = false;
+    Point lastGlyphPosition;
 };
 
 #endif /* BabelTypesetter_h */
