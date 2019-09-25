@@ -44,6 +44,13 @@ void BabelTypesetter::setCursor(int16_t x, int16_t y) {
     this->cursor.y = y;
 }
 
+void BabelTypesetter::setLayoutArea(int16_t x, int16_t y, int16_t w, int16_t h) {
+    this->minX = x;
+    this->minY = y;
+    this->maxX = x + w;
+    this->maxY = y + h;
+}
+
 void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     for (int16_t i=x; i<x+w; i++) {
         for (int16_t j=y; j<y+h; j++) {
@@ -56,8 +63,6 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
     bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
-    
-    // TODO: if in RTL mode, AND at maxX, scoot cursor leftward by the width of the glyph?
 
     if (mirrored) {
         switch (characterWidth) {
@@ -115,16 +120,35 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
 }
 
 size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
-    // TODO: RTL handling, word wrap, etc.
     BabelGlyph glyph;
+    this->glyphStorage->fetch_glyph_data(codepoint, &glyph);
+
+    if (this->direction == 1 && BABEL_INFO_GET_STRONG_RTL(glyph.info)) {
+        direction = -1;
+        uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
+        this->hasLastGlyph = false;
+        this->cursor.x = this->maxX - width;
+    }
+    else if (this->direction == -1 && BABEL_INFO_GET_STRONG_LTR(glyph.info)) {
+        direction = 1;
+        this->hasLastGlyph = false;
+        this->cursor.x = this->minX;
+    }
+
+    // TODO: handle control characters, like, properly?
+
     if(codepoint == '\n') {
-        this->cursor.x = 0;
+        if (this->direction == 1) {
+            this->cursor.x = this->minX;
+        } else {
+            this->cursor.x = this->maxX;
+        }
         this->cursor.y += 16 * this->textSize;
         this->hasLastGlyph = false;
     } else if(codepoint == '\r') {
         this->hasLastGlyph = false;
         return 0;
-    } else if (this->glyphStorage->fetch_glyph_data(codepoint, &glyph)) {
+    } else {
         // word wrap should go here
         int advance;
         if (BABEL_INFO_GET_MARK_IS_NON_SPACING(glyph.info) && this->hasLastGlyph) {

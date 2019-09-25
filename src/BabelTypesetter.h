@@ -67,6 +67,17 @@ public:
     /**************************************************************************/
     void setCursor(int16_t x, int16_t y);
     /**
+    /*!
+     @brief sets the area where glyphs can be drawn
+     @param x x origin of layout rect
+     @param y y origin of layout rect
+     @param w width of layout rect
+     @param h height of layout rect
+     @note OK! SO. The typesetter would LOVE to be completely agnostic about what kind of device it's rendering to. It would, like, love nothing more than to not ever have to query the underlying object that's `drawPixel`'ing. So if you have a 128x128 TFT and you want it to use the whole thing, have at! Pass in `0, 0, 128, 128` and typesetter will call your drawPixel method on all those pixels. For the 400x300 book, I'm probably going to specify some tasteful margins like `16, 16, 268, 368`.
+    */
+    /**************************************************************************/
+    void setLayoutArea(int16_t x, int16_t y, int16_t w, int16_t h);
+    /**
      @brief Draws a glyph at the given coordinates.
      @param x X coordinate of the glyph.
      @param y Y coordinate of the glyph.
@@ -98,6 +109,10 @@ public:
     uint16_t textSize = 1;
 protected:
     Point cursor;
+    int16_t minX = 0;
+    int16_t minY = 0;
+    int16_t maxX = 0;
+    int16_t maxY = 0;
 private:
     // layout direction. 1 for LTR, -1 for RTL.
     int8_t  direction = 1;
