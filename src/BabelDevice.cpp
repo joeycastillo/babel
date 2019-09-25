@@ -213,3 +213,7 @@ BABEL_CODEPOINT BabelDevice::lowercase_mapping_for_codepoint(BABEL_CODEPOINT cod
 
     return BABEL_MAPPING_GET_VALUE(mapping);
 }
+
+uint8_t BabelDevice::getHeight() {
+    return this->height;
+}

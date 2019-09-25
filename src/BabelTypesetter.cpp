@@ -60,6 +60,18 @@ void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, u
 }
 
 int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size) {
+    for (uint8_t i = 0; i < (this->bold ? 2 : 1); i++) {
+        if (this->italic) {
+            for(uint8_t j = 0; j < 4; j++) {
+                this->drawGlyph(x + i + 4 - j, y, glyph, color, size, j * 4, j * 4 + 4);
+            }
+        } else {
+            this->drawGlyph(x + i, y, glyph, color, size, 0, this->glyphStorage->getHeight());
+        }
+    }
+}
+
+int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size, uint8_t startY, uint8_t endY) {
     uint8_t width = BABEL_INFO_GET_GLYPH_WIDTH(glyph.info);
     uint8_t characterWidth = width > 8 ? 2 : 1; // <=8x16 glyphs fit in 16 bytes. >8x16 require two.
     bool mirrored = ((1 == -1) && BABEL_INFO_GET_MIRRORED_IN_RTL(glyph.info));
@@ -67,7 +79,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     if (mirrored) {
         switch (characterWidth) {
             case 1:
-                for(int8_t i=0; i<characterWidth*16; i++ ) {
+                for(int8_t i=startY; i<(characterWidth*endY); i++ ) {
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
@@ -78,7 +90,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                 }
                 break;
             case 2:
-                for(int8_t i=0; i<characterWidth*16; i++ ) {
+                for(int8_t i=startY; i<(characterWidth*endY); i++ ) {
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
@@ -92,7 +104,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
     } else {
         switch (characterWidth) {
             case 1:
-                for(int8_t i=0; i<characterWidth*16; i++ ) {
+                for(int8_t i=startY; i<(characterWidth*endY); i++ ) {
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {
@@ -103,7 +115,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                 }
                 break;
             case 2:
-                for(int8_t i=0; i<characterWidth*16; i++ ) {
+                for(int8_t i=startY; i<(characterWidth*endY); i++ ) {
                     uint8_t line = glyph.glyphData[i];
                     for(int8_t j=7; j>= 0; j--, line >>= 1) {
                         if(line & 1) {

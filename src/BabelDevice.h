@@ -130,6 +130,8 @@ public:
      @note This is a relatively expensive method to call, especially if the character in question has no lowercase mapping. You should first check the extended metadata to determine if a mapping is available, and only call this method if you are certain that one exists.
      */
     BABEL_CODEPOINT lowercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint);
+
+    uint8_t getHeight();
 protected:
     virtual void read(uint32_t addr, void *data, uint32_t len) = 0;
     int16_t search_mapping(uint32_t start_of_mapping, uint32_t first, uint32_t last, BABEL_CODEPOINT key);

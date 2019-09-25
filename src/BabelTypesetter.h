@@ -107,6 +107,8 @@ public:
     BabelDevice *glyphStorage = NULL;
     uint16_t textColor = 0;
     uint16_t textSize = 1;
+    bool italic = false;
+    bool bold = false;
 protected:
     Point cursor;
     int16_t minX = 0;
@@ -114,6 +116,7 @@ protected:
     int16_t maxX = 0;
     int16_t maxY = 0;
 private:
+    int drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size, uint8_t startY, uint8_t endY);
     // layout direction. 1 for LTR, -1 for RTL.
     int8_t  direction = 1;
     // these next two are for combining and enclosing marks, which should be drawn atop the previously drawn glyph.
