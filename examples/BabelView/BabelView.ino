@@ -29,7 +29,7 @@ void setup() {
       Serial.print("basic info ");
       Serial.println(glyph.info, HEX);
       if (BABEL_INFO_GET_CONTROL_CHARACTER(glyph.info)) Serial.println("It is a control character.");
-      if (BABEL_INFO_GET_MARK_IS_COMBINING(glyph.info)) Serial.println("It is a combining or enclosing mark.");
+      if (BABEL_INFO_GET_MARK_IS_NON_SPACING(glyph.info)) Serial.println("It is a combining or enclosing mark.");
       if (BABEL_INFO_GET_LINEBREAK_OPPORTUNITY(glyph.info)) Serial.println("You can break after this character.");
       if (BABEL_INFO_GET_STRONG_LTR(glyph.info)) Serial.println("It has a strong LTR affinity.");
       else if (BABEL_INFO_GET_STRONG_RTL(glyph.info)) Serial.println("It has a strong LTR affinity.");

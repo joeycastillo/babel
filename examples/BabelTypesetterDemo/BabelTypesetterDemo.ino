@@ -32,7 +32,7 @@ void loop() {
     for (int i = 0; i <= 0xFF; i++) {
       if ((i % 16 == 0) && i > 0) {
         typesetter.writeCodepoint('\n');
-        typesetter.textSize = ((i / 16) % 5) + 1;
+//        typesetter.textSize = ((i / 16) % 5) + 1;
       }
       typesetter.writeCodepoint(block | i);
     }
