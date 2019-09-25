@@ -20,7 +20,7 @@ void setup(void) {
   display.setRotation(3);
   typesetter.begin();
   typesetter.textColor = GxEPD_BLACK;
-  typesetter.setLayoutArea(16, 16, 268, 368);
+  typesetter.setLayoutArea(16, 16, 264, 368);
 //  while(!Serial);
 }
 
