@@ -98,10 +98,17 @@ public:
      @brief Writes a series of glyphs at the current cursor position. It will not currently wrap, but will advance the line for newlines, and automatically change the layout mode to RTL or LTR as appropriate.
      @param codepoints An array of codepoints that you wish to draw
      @param len The number of codepoints in the array
-     @returns the number 1 if a codepoint was written, 0 if one was not.
+     @returns the number of codepoints written
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
     */
     size_t writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len);
+    /**
+     @brief Prints a UTF-8 string at the current cursor position. It will not currently wrap, but will advance the line for newlines, and automatically change the layout mode to RTL or LTR as appropriate.
+     @param utf8String a NULL-terminated UTF-8 string
+     @returns the number of codepoints printed
+     @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
+    */
+    size_t print(char * utf8String);
 
     // TODO: make these protected, add accessors where it makes sense
     BabelDevice *glyphStorage = NULL;
