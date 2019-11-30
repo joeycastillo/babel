@@ -36,7 +36,7 @@ BabelTypesetter::BabelTypesetter() {
 }
 
 void BabelTypesetter::begin() {
-    this->glyphStorage->begin();
+    this->babelDevice->begin();
 }
 
 void BabelTypesetter::setCursor(int16_t x, int16_t y) {
@@ -66,7 +66,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
                 this->drawGlyph(x + i + 4 - j, y, glyph, color, size, j * 4, j * 4 + 4);
             }
         } else {
-            this->drawGlyph(x + i, y, glyph, color, size, 0, this->glyphStorage->getHeight());
+            this->drawGlyph(x + i, y, glyph, color, size, 0, this->babelDevice->getHeight());
         }
     }
 }
@@ -133,7 +133,7 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
 
 size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
     BabelGlyph glyph;
-    this->glyphStorage->fetch_glyph_data(codepoint, &glyph);
+    this->babelDevice->fetch_glyph_data(codepoint, &glyph);
 
     if (this->direction == 1 && BABEL_INFO_GET_STRONG_RTL(glyph.info)) {
         direction = -1;
@@ -194,11 +194,31 @@ size_t BabelTypesetter::writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len
 }
 
 size_t BabelTypesetter::print(char * utf8String) {
-    size_t len = this->glyphStorage->utf8_codepoint_length(utf8String);
+    size_t len = this->babelDevice->utf8_codepoint_length(utf8String);
     BABEL_CODEPOINT *codepoints = (BABEL_CODEPOINT *)malloc(len * sizeof(BABEL_CODEPOINT));
-    this->glyphStorage->utf8_parse(utf8String, codepoints);
+    this->babelDevice->utf8_parse(utf8String, codepoints);
     size_t retVal = this->writeCodepoints(codepoints, len);
     free(codepoints);
 
     return retVal;
+}
+
+BabelDevice * BabelTypesetter::getBabel() {
+    return this->babelDevice;
+}
+
+void BabelTypesetter::setTextColor(uint16_t textColor) {
+    this->textColor = textColor;
+}
+
+void BabelTypesetter::setTextSize(uint16_t textSize) {
+    this->textSize = textSize;
+}
+
+void BabelTypesetter::setItalic(bool italic) {
+    this->italic = italic;
+}
+
+void BabelTypesetter::setBold(bool bold) {
+    this->bold = bold;
 }

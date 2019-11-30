@@ -29,7 +29,7 @@
 
 BabelTypesetterGFX::BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *spi) {
     this->gfx = gfx;
-    this->glyphStorage = new BabelSPIFlash(cs, spi);
+    this->babelDevice = new BabelSPIFlash(cs, spi);
 }
 
 void BabelTypesetterGFX::begin() {

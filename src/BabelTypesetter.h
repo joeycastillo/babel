@@ -110,13 +110,52 @@ public:
     */
     size_t print(char * utf8String);
 
-    // TODO: make these protected, add accessors where it makes sense
-    BabelDevice *glyphStorage = NULL;
+    /**
+    /*!
+     @brief access to the Babel abstrsction, for things like getting glyphs, case mapping, word wrapping, etc.
+    */
+    /**************************************************************************/
+    BabelDevice *getBabel();
+
+    /**
+    /*!
+     @brief sets text color
+     @param textColor the color you want to set
+    */
+    /**************************************************************************/
+    void setTextColor(uint16_t textColor);
+
+    /**
+    /*!
+     @brief sets text size
+     @param textSize a size multiplier (2x, 3x, etc)
+    */
+    /**************************************************************************/
+    void setTextSize(uint16_t textSize);
+
+    /**
+    /*!
+     @brief sets or unsets italic mode
+     @param italic true if the text should be drawn in italic, false for non-italic
+     @note We don't actually have italic glyphs; instead we offset the lines of the glyph to the right by up to three pixels. This means that the text may extend outside the normal bounding box. This may also impact readability for some languages and symbols; make sure to test your intended use.
+    */
+    /**************************************************************************/
+    void setItalic(bool italic);
+
+    /**
+    /*!
+     @brief sets or unsets bold mode
+     @param bold true if the text should be drawn in bold, false for non-bold
+     @note We don't actually have boldface glyphs; instead, we double-stroke the glyph, one pixel to the right. This means that the text may extend outside the normal bounding box. This may also impact readability for some languages and symbols; make sure to test your intended use.
+    */
+    /**************************************************************************/
+    void setBold(bool bold);
+protected:
+    BabelDevice *babelDevice = NULL;
     uint16_t textColor = 0;
     uint16_t textSize = 1;
     bool italic = false;
     bool bold = false;
-protected:
     Point cursor;
     int16_t minX = 0;
     int16_t minY = 0;

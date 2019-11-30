@@ -19,7 +19,7 @@ void setup(void) {
   display.init(115200);
   display.setRotation(3);
   typesetter.begin();
-  typesetter.textColor = GxEPD_BLACK;
+  typesetter.setTextColor(GxEPD_BLACK);
 //  while(!Serial);
 }
 

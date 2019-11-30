@@ -19,7 +19,7 @@ void setup(void) {
   display.init(115200);
   display.setRotation(3);
   typesetter.begin();
-  typesetter.textColor = GxEPD_BLACK;
+  typesetter.setTextColor(GxEPD_BLACK);
   typesetter.setLayoutArea(16, 16, 264, 368);
 //  while(!Serial);
 }
@@ -28,19 +28,9 @@ void setup(void) {
 
 void loop() {
   Serial.println("clearing");
-  typesetter.bold = false;
-  typesetter.italic = false;
   display.fillScreen(GxEPD_WHITE);
   typesetter.setCursor(16, 16);
   typesetter.print("Voici mon secret. Il est très \nsimple: on ne voit bien qu'avec \nle cœur. L'essentiel est \ninvisible pour les yeux.");
-//  typesetter.writeCodepoints(string, 63);
-//  typesetter.italic = true;
-//  typesetter.writeCodepoints(string, 63);
-//  typesetter.italic = false;
-//  typesetter.bold = true;
-//  typesetter.writeCodepoints(string, 63);
-//  typesetter.italic = true;
-//  typesetter.writeCodepoints(string, 63  );
   while (display.nextPage());
   Serial.println("drawn, wait");
   delay(1000);
