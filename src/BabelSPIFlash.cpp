@@ -61,6 +61,8 @@ void BabelSPIFlash::begin() {
     // Speed up to max device frequency
     this->settings = SPISettings(GD25Q16C_MAX_CLOCK_SPEED_MHZ*1000000UL, MSBFIRST, SPI_MODE0);
 
+    delay(50);
+
     BabelDevice::begin();
 }
 

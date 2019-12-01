@@ -66,6 +66,14 @@ public:
     */
     /**************************************************************************/
     void setCursor(int16_t x, int16_t y);
+
+    /**
+    /*!
+     @brief resets cursor position to origin of layout area
+    */
+    /**************************************************************************/
+    void resetCursor();
+
     /**
     /*!
      @brief sets the area where glyphs can be drawn
@@ -112,7 +120,7 @@ public:
 
     /**
     /*!
-     @brief access to the Babel abstrsction, for things like getting glyphs, case mapping, word wrapping, etc.
+     @brief access to the Babel abstraction, for things like getting glyphs, case mapping, word wrapping, etc.
     */
     /**************************************************************************/
     BabelDevice *getBabel();
@@ -150,12 +158,21 @@ public:
     */
     /**************************************************************************/
     void setBold(bool bold);
+
+    /**
+    /*!
+     @brief sets the line width for word wrapping
+     @param lineWidth 0 to disable word wrapping, or the max width in pixels of a line
+    */
+    /**************************************************************************/
+    void setWordWrap(bool wordWrap);
 protected:
     BabelDevice *babelDevice = NULL;
     uint16_t textColor = 0;
     uint16_t textSize = 1;
     bool italic = false;
     bool bold = false;
+    uint16_t lineWidth = 0;
     Point cursor;
     int16_t minX = 0;
     int16_t minY = 0;

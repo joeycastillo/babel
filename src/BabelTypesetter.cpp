@@ -44,11 +44,16 @@ void BabelTypesetter::setCursor(int16_t x, int16_t y) {
     this->cursor.y = y;
 }
 
+void BabelTypesetter::resetCursor() {
+    this->setCursor(this->minX, this->minY);
+}
+
 void BabelTypesetter::setLayoutArea(int16_t x, int16_t y, int16_t w, int16_t h) {
     this->minX = x;
     this->minY = y;
     this->maxX = x + w;
     this->maxY = y + h;
+    this->setCursor(x, y);
 }
 
 void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -184,10 +189,34 @@ size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
 
 size_t BabelTypesetter::writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len) {
     size_t retVal = 0;
-
-    this->hasLastGlyph = false;
-    for(size_t i = 0; i < len; i++) {
-        retVal += this->writeCodepoint(codepoints[i]);
+    
+    if (this->lineWidth == 0) {
+        // no need to worry about word wrap
+        this->hasLastGlyph = false;
+        for(size_t i = 0; i < len; i++) {
+            retVal += this->writeCodepoint(codepoints[i]);
+        }
+    } else {
+        // TODO: make word wrapping a boolean and just use page margins.
+        size_t pos = 0;
+        int loop = 0;
+        while (pos < len) {
+            bool write_newline = false;
+            int32_t num_glyphs_to_draw = this->babelDevice->word_wrap_position(codepoints + pos, len - pos, this->lineWidth);
+            if (num_glyphs_to_draw < 0){
+                num_glyphs_to_draw = (int32_t)(len - pos);
+            }
+            else {
+                write_newline = true;
+            }
+            for(int i = pos; i < pos + num_glyphs_to_draw; i++) {
+                retVal += this->writeCodepoint(codepoints[i]);
+            }
+            pos += num_glyphs_to_draw;
+            if (write_newline) {
+                retVal += this->writeCodepoint(0x000A); // newline
+            }
+        }
     }
 
     return retVal;
@@ -221,4 +250,8 @@ void BabelTypesetter::setItalic(bool italic) {
 
 void BabelTypesetter::setBold(bool bold) {
     this->bold = bold;
+}
+
+void BabelTypesetter::setWordWrap(bool wordWrap) {
+    this->lineWidth = wordWrap ? this->maxX - this->minX : 0;
 }

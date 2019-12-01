@@ -44,6 +44,12 @@ public:
     BABEL_CODEPOINT get_last_available_codepoint();
     
     /**
+     @brief Just an accessor for the declared native height of the font on the chip.
+     @return the height of all glyphs in pixels
+     */
+    uint8_t getHeight();
+
+    /**
      @brief This method seeks into a lookup table for basic data about the glyph. O(1) access time.
      @return A uint32_t that contains the glyph's location on the device in the lower 22 bits, and some basic metadata in the higher 10 bits.
      @param codepoint The codepoint whose basic data you want to fetch.
@@ -131,7 +137,15 @@ public:
      */
     BABEL_CODEPOINT lowercase_mapping_for_codepoint(BABEL_CODEPOINT codepoint);
 
-    uint8_t getHeight();
+    /**
+     @brief Method for determining where to word wrap lines
+     @param buf A buffer of BABEL_CODEPOINTS that you want to wrap.
+     @param len number of codepoints in buf
+     @param line_width the width in pixels that you want to wrap to
+     @return the position where a newline should be added in order to wrap to a given line length, or -1 if no newline is required.
+     */
+    int16_t word_wrap_position(BABEL_CODEPOINT *buf, size_t len, int16_t line_width);
+
 protected:
     virtual void read(uint32_t addr, void *data, uint32_t len) = 0;
     int16_t search_mapping(uint32_t start_of_mapping, uint32_t first, uint32_t last, BABEL_CODEPOINT key);

@@ -85,6 +85,10 @@ BABEL_CODEPOINT BabelDevice::get_last_available_codepoint() {
     return this->last_codepoint;
 }
 
+uint8_t BabelDevice::getHeight() {
+    return this->height;
+}
+
 uint32_t BabelDevice::fetch_glyph_basic_info(BABEL_CODEPOINT codepoint) {
     uint32_t retVal;
     uint32_t loc = this->location_of_lut + codepoint * 6;
@@ -214,6 +218,31 @@ BABEL_CODEPOINT BabelDevice::lowercase_mapping_for_codepoint(BABEL_CODEPOINT cod
     return BABEL_MAPPING_GET_VALUE(mapping);
 }
 
-uint8_t BabelDevice::getHeight() {
-    return this->height;
+int16_t BabelDevice::word_wrap_position(BABEL_CODEPOINT *buf, size_t len, int16_t line_width) {
+    size_t wrap_candidate = 0;
+    int16_t position_in_string = 0;
+    int16_t cursor_location = 0;
+    bool wrapped = true;
+    
+    while(cursor_location < line_width) {
+        uint32_t glyph_info = this->fetch_glyph_basic_info(buf[position_in_string]);
+        if (BABEL_INFO_GET_LINEBREAK_OPPORTUNITY(glyph_info)) {
+            wrap_candidate = position_in_string;
+        }
+        if (!(BABEL_INFO_GET_MARK_IS_NON_SPACING(glyph_info) || BABEL_INFO_GET_CONTROL_CHARACTER(glyph_info))) {
+            cursor_location += BABEL_INFO_GET_GLYPH_WIDTH(glyph_info);
+        }
+        position_in_string++;
+        if (position_in_string >= len) {
+            wrapped = false;
+            break;
+        }
+    }
+    
+    if (wrapped) {
+        if (wrap_candidate) return wrap_candidate + 1; // if we found a wrap point, return it.
+        else return len; // otherwise, they'll just need to break at the end of the line even though it's in the middle of a word. 
+    }
+    
+    return -1; // we didn't have to word wrap
 }
