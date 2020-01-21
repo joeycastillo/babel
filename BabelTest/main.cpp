@@ -266,13 +266,32 @@ void utf8ParsingTest() {
     }
 }
 
+void wordWrappingTest(size_t line_width) {
+    char utf8String[] = "It is only with the heart that one can see rightly. That which is essential is invisible to the eye.";
+    size_t len = babel->utf8_codepoint_length(utf8String);
+    BABEL_CODEPOINT *buf = (BABEL_CODEPOINT *)malloc(len * sizeof(BABEL_CODEPOINT));
+    babel->utf8_parse(utf8String, buf);
+    cout << utf8String << endl;
+    size_t pos = 0;
+    while (pos < len) {
+        int32_t wrap_position = babel->word_wrap_position(buf + pos, len - pos, line_width);
+        if (wrap_position < 0) wrap_position = (int32_t)(len - pos);
+        for (uint16_t i = pos; i < pos + wrap_position; i++) {
+            cout << utf8String[i];
+        }
+        cout << endl;
+        pos += wrap_position;
+    }
+
+}
+
 int main(int argc, const char * argv[]) {
     if (argc != 2) {
-        cout << "Usage: BabelTest /path/to/babel->bin" << endl;
+        cout << "Usage: BabelTest /path/to/babel.bin" << endl;
         exit(1);
     }
     babel = new BabelMockDevice(argv[1]);
     babel->begin();
-    utf8ParsingTest();
+    wordWrappingTest(40);
     return 0;
 }

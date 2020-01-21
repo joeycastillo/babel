@@ -44,6 +44,14 @@ void BabelTypesetter::setCursor(int16_t x, int16_t y) {
     this->cursor.y = y;
 }
 
+int16_t BabelTypesetter::getCursorX() {
+    return this->cursor.x;
+}
+
+int16_t BabelTypesetter::getCursorY() {
+    return this->cursor.y;
+}
+
 void BabelTypesetter::resetCursor() {
     this->setCursor(this->minX, this->minY);
 }
@@ -54,6 +62,7 @@ void BabelTypesetter::setLayoutArea(int16_t x, int16_t y, int16_t w, int16_t h) 
     this->maxX = x + w;
     this->maxY = y + h;
     this->setCursor(x, y);
+    if (this->lineWidth != 0) this->lineWidth = this->maxX - this->minX;
 }
 
 void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -164,7 +173,7 @@ size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
         this->hasLastGlyph = false;
     } else if(codepoint == '\r') {
         this->hasLastGlyph = false;
-        return 0;
+        return 1;
     } else {
         // word wrap should go here
         int advance;
@@ -180,11 +189,9 @@ size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
             // advance cursor
             this->cursor.x += advance * this->direction;
         }
-        
-        return 1;
     }
 
-    return 0;
+    return 1;
 }
 
 size_t BabelTypesetter::writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len) {
@@ -216,6 +223,8 @@ size_t BabelTypesetter::writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len
             if (write_newline) {
                 retVal += this->writeCodepoint(0x000A); // newline
             }
+
+            if (this->cursor.y >= this->maxY) break;
         }
     }
 
