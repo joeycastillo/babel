@@ -1,4 +1,3 @@
-import board
 import displayio
 import struct
 try:
@@ -7,13 +6,14 @@ try:
 except ImportError:
     glyph_cache = None
 
-class AbstractBabel:
+class _Babel:
     """Abstract class for access to Unicode info / Unifont glyphs.
     Use FileBabel or FlashBabel depending on where you stored the Babel image."""
     BABEL_HEADER_EXTRA_TYPE_UPPERCASE_MAPPINGS = const(1)
     BABEL_HEADER_EXTRA_TYPE_LOWERCASE_MAPPINGS = const(2)
     BABEL_HEADER_EXTRA_TYPE_TITLECASE_MAPPINGS = const(3)
     BABEL_HEADER_EXTRA_TYPE_MIRRORING_MAPPINGS = const(4)
+    BABEL_HEADER_EXTRA_TYPE_ARABIC_MAPPINGS = const(64)
 
     def __init__(self):
         header = bytearray(20)
@@ -48,6 +48,9 @@ class AbstractBabel:
             elif type == BABEL_HEADER_EXTRA_TYPE_MIRRORING_MAPPINGS:
                 self.start_of_mirrored_mapping = loc
                 self.end_of_mirrored_mapping = loc + len
+            elif type == BABEL_HEADER_EXTRA_TYPE_ARABIC_MAPPINGS:
+                self.start_of_arabic_mapping = loc
+                self.arabic_mapping_num_entries = int(len // (2 * 4)) # 4 entries of 2 bytes each
 
         self.info_for_replacement_character = self._fetch_glyph_basic_info(0xFFFD)
         self.extended_info_for_replacement_character = self._fetch_glyph_extended_info(0xFFFD)
@@ -59,8 +62,9 @@ class AbstractBabel:
     def _fetch_glyph_basic_info(self, codepoint):
         """Returns a packed 32-bit integer with basic information about the glyph.
         From LSB to MSB:
-            * 21 bits: location of the glyph in the babel image
+            * 22 bits: location of the glyph in the babel image
             * 5 bits : width of the glyph, should be <= 16
+            * 1 bit  : is nonspacing mark
             * 2 bits : RTL nature
                         - 00: no RTL affinity
                         - 01: strong RTL affinity
@@ -84,8 +88,9 @@ class AbstractBabel:
             * 1 bit  : has lowercase mapping
             * 1 bit  : has titlecase mapping
             * 4 bits : an enum of the bidi class, see babelconvert for details
+            * 1 bit  : has bidi mirroring mapping
             * 1 bit  : is whitespace
-        The two high bits are unset and may be used for features in the future.
+        The two high bits are unset and may be used for additional features in the future.
         """
         loc = 4 + self.location_of_lut + codepoint * 6
         buf = bytearray(2)
@@ -94,29 +99,37 @@ class AbstractBabel:
 
         return retval
 
-    def _search_mapping(self, start, first, last, key):
+    def _search_mapping(self, codepoint, address, last, first = 0):
+        """Performs a binary search on one of the mapping tables. Parameters:
+        codepoint: the codepoint you're searching for
+        address: the address in babel.bin where the mapping table resides
+        last: last index that should be considered (i.e. len - 1)
+        first: first index that should be considered (omit; should be 0 until we start searching)
+        Returns an index into the mapping table where the codepoint was found,
+        or None if the codepoint was not found."""
         retval = None
         if first > last:
             return retval
         mid = int((first + last) / 2)
         buf = bytearray(4)
-        self._read_address(start + mid * 4, buf)
-        (testkey,testvalue) = struct.unpack('<HH', buf)
-        if key == testkey:
+        self._read_address(address + mid * 4, buf)
+        (key,value) = struct.unpack('<HH', buf)
+        if codepoint == key:
             retval = mid
         else:
-            if key < testkey:
-                retval = self._search_mapping(start, first, mid - 1, key)
+            if codepoint < key:
+                retval = self._search_mapping(codepoint, address, mid - 1, first)
             else:
-                retval = self._search_mapping(start, mid + 1, last, key)
+                retval = self._search_mapping(codepoint, address, last, mid + 1)
         return retval
 
     def _mapping_for_codepoint(self, codepoint, start, end):
         """Searches a mapping table (i.e. lowercase -> UPPERCASE) for a glyph.
-        If no mapping exists, returns the original value. Relatively expensive to call;
-        first check the extended info flags to make sure a mapping exists."""
+        If no mapping exists, returns the original value.
+        Relatively expensive to call; O(log(n)) based on the size of the mapping table;
+        before calling, check the extended info flags to make sure a mapping exists."""
         last_index = int((end - start) / 4)
-        index_of_result = self._search_mapping(start, 0, last_index, codepoint)
+        index_of_result = self._search_mapping(codepoint, start, last_index)
         if index_of_result is not None:
             buf = bytearray(4)
             self._read_address(start + index_of_result * 4, buf)
@@ -126,13 +139,42 @@ class AbstractBabel:
             return codepoint
 
     def _uppercase_mapping_for_codepoint(self, codepoint):
-        return self._mapping_for_codepoint(codepoint, self.start_of_uppercase_mapping, self.end_of_uppercase_mapping)
+        """Returns an uppercase version of the codepoint passed in,
+        or the same codepoint if there is no uppercase mapping table available."""
+        try:
+            return self._mapping_for_codepoint(codepoint, self.start_of_uppercase_mapping, self.end_of_uppercase_mapping)
+        except AttributeError:
+            return codepoint
 
     def _lowercase_mapping_for_codepoint(self, codepoint):
-        return self._mapping_for_codepoint(codepoint, self.start_of_lowercase_mapping, self.end_of_lowercase_mapping)
+        """Returns a lowercase version of the codepoint passed in,
+        or the same codepoint if there is no lowercase mapping table available."""
+        try:
+            return self._mapping_for_codepoint(codepoint, self.start_of_lowercase_mapping, self.end_of_lowercase_mapping)
+        except AttributeError:
+            return codepoint
+
+    def _arabic_mapping_for_codepoint(self, codepoint):
+        """Returns an array of length 4, containing up to four alternate glyph forms for a
+        given codepoint in the order: isolated, initial, medial, final. Forms that do not
+        exist (i.e. a medial Alef) are set to 0. If the codepoint has no alternate glyph
+        forms, returns None. See notes in babelconvert for more details about Arabic
+        shaping and this lookup table."""
+        index = codepoint - 0x0621
+        if index < 0 or index > self.arabic_mapping_num_entries:
+            return None
+        buf = bytearray(8)
+        self._read_address(self.start_of_arabic_mapping + 8 * index, buf)
+        if buf[0] == 0:
+            # all characters that support shaping have an isolated form.
+            # if this entry doesn't, it's not a valid entry.
+            return None
+        else:
+            return list(struct.unpack('<4H', buf))
 
     def localized_uppercase(self, string):
-        """Returns an uppercase version of the string passed in."""
+        """Returns an uppercase version of the string passed in, or the same string if
+        there is no uppercase mapping table available."""
         retval = ""
         for c in string:
             info = self._fetch_glyph_extended_info(ord(c))
@@ -144,7 +186,8 @@ class AbstractBabel:
         return retval
 
     def localized_lowercase(self, string):
-        """Returns a lowercase version of the string passed in."""
+        """Returns a lowercase version of the string passed in, or the same string if
+        there is no lowercase mapping table available."""
         retval = ""
         for c in string:
             info = self._fetch_glyph_extended_info(ord(c))
@@ -155,7 +198,93 @@ class AbstractBabel:
 
         return retval
 
-class FileBabel(AbstractBabel):
+    FORM_ISOLATED = const(0)
+    FORM_INITIAL = const(1)
+    FORM_MEDIAL = const(2)
+    FORM_FINAL = const(3)
+
+    def shape_arabic(self, string):
+        """Returns a version of the input string that maps Arabic characters to shaped forms.
+           If Arabic shaping information is unavailable, returns the original string.
+           See babelconvert for a primer on Arabic shaping and this algorithm."""
+        if not hasattr(self, 'start_of_arabic_mapping'):
+            return string
+
+        retval = ""
+        for i in range(0, len(string)):
+            current_codepoint = ord(string[i])
+            if current_codepoint >> 8 != 0x06:
+                # we only need to check the Arabic block
+                retval += chr(current_codepoint)
+                continue
+
+            forms = self._arabic_mapping_for_codepoint(current_codepoint)
+            if forms is None:
+                # this character does not have shaping information (numerals, diacritics, etc.)
+                retval += chr(current_codepoint)
+            else:
+                # determine if there is a previous character to connect to or end on
+                previous_index = i - 1
+                while previous_index >= 0:
+                    candidate = ord(string[previous_index])
+                    info = self._fetch_glyph_basic_info(candidate)
+                    # this looks confusing but the conditional is basically:
+                    #   is the candidate character in the Arabic block?
+                    #   is the candidate character a non-spacing mark?
+                    # if both are true, don't stop, keep looking.
+                    if not (candidate >> 8 == 0x06 and info & 0x8000000 != 0):
+                        break
+                    previous_index -= 1
+                # if we're at the beginning of the string, clearly there's nothing to connect to.
+                previous = None if previous_index < 0 else ord(string[previous_index])
+                if previous is not None:
+                    previous_forms = self._arabic_mapping_for_codepoint(previous)
+                    if previous_forms is None or (previous_forms[FORM_INITIAL] == 0 and previous_forms[FORM_MEDIAL] == 0):
+                        # also if the previous character has no way to connect to us.
+                        previous = None
+
+                # now determine if there is a next character to connect to or end on
+                next_index = i + 1
+                while next_index < len(string):
+                    candidate = ord(string[next_index])
+                    info = self._fetch_glyph_basic_info(candidate)
+                    if not (candidate >> 8 == 0x06 and info & 0x8000000 != 0):
+                        # see above for notes on this conditional
+                        break
+                    next_index += 1
+                # again, at the end, nothing to connect to
+                next = None if next_index >= len(string) else ord(string[next_index])
+                if next is not None:
+                    next_forms = self._arabic_mapping_for_codepoint(next)
+                    if next_forms is None or (next_forms[FORM_MEDIAL] == 0 and next_forms[FORM_FINAL] == 0):
+                        # the next character has to have a medial or final form for us to connect to it.
+                        next = None
+
+                # handle one special case: if current is Lam and next is Alef, we need a Lam-Alef ligature.
+                if current_codepoint == 0x0644 and next in [0x0622, 0x0623, 0x0625, 0x0627]:
+                    if next == 0x0622:
+                        retval += chr(0xFEF5) if previous is None else chr(0xFEF6)
+                    if next == 0x0623:
+                        retval += chr(0xFEF7) if previous is None else chr(0xFEF8)
+                    if next == 0x0625:
+                        retval += chr(0xFEF9) if previous is None else chr(0xFEFA)
+                    if next == 0x0627:
+                        retval += chr(0xFEFB) if previous is None else chr(0xFEFC)
+                    continue
+
+                # from here it's pretty straightforward: we know what comes before and what comes after,
+                # and the forms array contains the forms we support.
+                if previous is not None and next is not None and forms[FORM_MEDIAL] > 0:
+                    retval += chr(forms[FORM_MEDIAL])
+                elif next is not None and forms[FORM_INITIAL] > 0:
+                    retval += chr(forms[FORM_INITIAL])
+                elif previous is not None and forms[FORM_FINAL] > 0:
+                    retval += chr(forms[FORM_FINAL])
+                else:
+                    retval += chr(forms[FORM_ISOLATED])
+        return retval
+
+class Babel(_Babel):
     def __init__(self, filename = 'BABEL.BIN'):
         self.file = open(filename, 'rb')
         super().__init__()
@@ -163,49 +292,4 @@ class FileBabel(AbstractBabel):
     def _read_address(self, address, read_buffer):
         self.file.seek(address)
         self.file.readinto(read_buffer)
-        return read_buffer
-
-class FlashBabel(AbstractBabel):
-    SFLASH_CMD_READ = const(0x03)
-    SFLASH_CMD_READ_STATUS = const(0x05)
-    SFLASH_CMD_READ_STATUS2 = const(0x35)
-    SFLASH_CMD_ENABLE_RESET = const(0x66)
-    SFLASH_CMD_RESET = const(0x99)
-    SFLASH_CMD_WRITE_DISABLE = const(0x04)
-
-    def __init__(self, spi_cs, spi_bus = board.SPI()):
-        from adafruit_bus_device.spi_device import SPIDevice as spidev
-        _spi = spidev(spi_bus, spi_cs, baudrate=1000000)
-
-        read_buffer = bytearray(1)
-        # We don't know what state the flash is in, so make sure it's not up to anything, then reset.
-        with _spi as spi:
-            while True:
-                # The write in progress bit should be low.
-                spi.write(bytearray([SFLASH_CMD_READ_STATUS]))
-                spi.readinto(read_buffer)
-                if read_buffer[0] & 0x01 == 0:
-                    break
-            while True:
-                # The suspended write/erase bit should be low.
-                spi.write(bytearray([SFLASH_CMD_READ_STATUS2]))
-                spi.readinto(read_buffer)
-                if read_buffer[0] & 0x80 == 0:
-                    break
-            # reset and disable writes
-            spi.write(bytearray([SFLASH_CMD_ENABLE_RESET]))
-            spi.write(bytearray([SFLASH_CMD_RESET]))
-            spi.write(bytearray([SFLASH_CMD_WRITE_DISABLE]))
-        self._spi = _spi
-        super().__init__()
-
-    def _read_address(self, address, read_buffer):
-        write_buffer = bytearray(4)
-        write_buffer[0] = SFLASH_CMD_READ
-        write_buffer[1] = (address >> 16) & 0xFF
-        write_buffer[2] = (address >> 8) & 0xFF
-        write_buffer[3] = address & 0xFF
-        with self._spi as spi:
-            spi.write(write_buffer)
-            spi.readinto(read_buffer)
         return read_buffer

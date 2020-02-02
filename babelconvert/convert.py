@@ -223,6 +223,7 @@ for line in open('unifont_upper-12.1.03.hex', 'r'):
         unifont[codepoint] = bidi_info[codepoint]
         unifont[codepoint].glyphdata = bytes.fromhex(data)
 
+# Conlangs
 for line in open('unifont_csur-12.1.03.hex', 'r'):
     line = line.strip().split(":")
     if len(line) < 2:
@@ -238,6 +239,81 @@ for line in open('unifont_csur-12.1.03.hex', 'r'):
             unifont[codepoint].isNSM = True
         unifont[codepoint].glyphdata = bytes.fromhex(data)
     
+
+# Arabic / Perso-Arabic Shaping
+# NOTE: Unicode uses the word 'Arabic' for these glyphs, but this block also has glyphs for non-Arabic languages
+# such as Persian, Kurdish, Azerbaijani, Sindhi, Balochi, Pashto, Lurish, Urdu and Mandinka, among others.
+
+# A primer: Perso-Arabic letters can take one of up to four different forms, depending where they appear in a word
+# and what letters surround them. So, for example, let's look at four letters:
+
+# name    isolated    initial    medial    final
+# Alef‭       ﺍ          N/A       N/A        ﺎ  ‬
+# Bah‭        ﺏ           ﺑ         ﺒ         ﺐ  ‬
+# Ha ‭        ﺡ           ﺣ         ﺤ         ﺢ  ‬
+# Lam‭        ﻝ           ﻟ         ﻠ         ﻞ  ‬
+
+# The N/A is misleading, but useful for the algorithm; a word can start with Alef, it just means that it will take
+# its isolated form. Alef can also appear in the middle of a word, it just means that it will take its final form,
+# and the character after it will take its initial form. This will become clear once we look at a word or two:
+#   door: ﺑﺎﺏ (bab)
+# The letter Bah (ﺏ) appears twice here, in two different forms: the first Bah on the right is its initial form,
+# and it connects to the Alef (ﺍ) next to it. But since Alef doesn't have a medial form, just an isolated and a
+# final one, the last Bah cannot connect to it; it stands alone.
+# But what if we're talking about a specific door?
+#   the door: ﺍﻟﺒﺎﺏ (al bab)
+# The Alef on the right stands alone (remember, its only options are final and isolated). The Lam comes next, in
+# its initial form, which connects to the Bah. Bah can connect on both sides, so it now requires a medial form,
+# to connect to both the Lam before it, and the Alef after it. (the last Bah still stands alone)
+# To illustrate the final form of Bah:
+#   love: ﺍﻟﺤﺐ (al hub)
+# the Alef and Lam should look familiar from earlier; then Lam connects to Ha in its medial form, which connects
+# to Bah. Since the word ends in Bah, Bah takes its final form.
+
+# Unicode includes two blocks called Arabic Presentation Forms. They include isolated, initial, medial and final
+# forms for all these letters; we just have to figure out which ones to use and when.
+
+# They also include a bunch of ligatures for various combinations, plus a ligature for Allah (ﷲ) and the Basmala
+# (﷽) — believe it or not, those are each one Unicode codepoint! In the end though, there's only one
+# ligature that's absolutely necessary: the Lam Alef (ﻻ), which is the only correct way to display Lam followed
+# by Alef (ﻟ‍ﺎ would be considered unreadable).
+# There are only eight forms for the Lam Alef ligature, so we're not including anything in babel.bin for this.
+# Instead, implementations should make sure to implement the following:
+# U+0644 followed by U+0622 => U+FEF5 (isolated) or 0xFEF6 (final)
+# U+0644 followed by U+0623 => U+FEF7 (isolated) or 0xFEF8 (final)
+# U+0644 followed by U+0625 => U+FEF9 (isolated) or 0xFEFA (final)
+# U+0644 followed by U+0627 => U+FEFB (isolated) or 0xFEFC (final)
+
+# Finally, there's one last wrinkle. Arabic short vowels and diacritics appear above and below the line of
+# text. Unicode accomplishes this by encoding them as non-spacing marks, and they are included inline in a
+# string of Arabic text. These marks do not participate in shaping; implementations should just make sure to
+# pass over non-spacing marks from the Arabic block when determining the appropriate shape for a character.
+
+# Enough background! The upshot is that we only need to encode one lookup table here. The first row in this
+# table corresponds to U+0621, and it goes through U+06D2 (inclusive). Each row contains an array of four
+# codepoints for each of the possible presentation forms (isolated, initial, medial, final), or 0 if a codepoint
+# does not support that form. All shapable code points have an isolated form; thus, if the isolated form is 0,
+# you can assume that the codepoint does not participate in shaping (i.e. numerals, punctuation, diacritics).
+
+# Also I admit this code is ugly; it just brute forces its way through both the Arabic and Arabic Presentation
+# Form blocks, many times, to find codepoints that match based on their Unicode names. Works, though!
+
+arabic_lookup = [0] * 4 * 179
+forms = [" ISOLATED FORM", " INITIAL FORM", " MEDIAL FORM", " FINAL FORM"]
+for i in range(0x0600, 0x0700):
+    # c/i is the original codepoint, p/j is the presentation form candidate.
+    # k is the index of the form; the order is isolated/initial/medial/final.
+    c = "{:04X}".format(i)
+    if c in bidi_info:
+        name = bidi_info[c].name
+        for j in range(0xFB50, 0xFEFF):
+            p = "{:04X}".format(j)
+            if p in bidi_info:
+                p_name = bidi_info[p].name
+                for k in range(0, 4):
+                    form = forms[k]
+                    if p_name == name + form:
+                        arabic_lookup[4 * (i - 0x0621) + k] = j
 
 
 def generate_unifont_bin():
@@ -258,7 +334,7 @@ def generate_unifont_bin():
             # this gives us the 10 high bits to use for whatever we want!
             # 0bBCLRNWWWWWxxxxxxxxxxxxxxxxxxxxxx
             # WWWWW - width / advance. Currently the only values are 0, 8 and 16, but I'm leaving it as a five bit value in case a variable width font becomes a thing.
-            # N - Character is a COMBINING or ENCLOSING mark.
+            # N - Character is a COMBINING, ENCLOSING or NON-SPACING mark.
             # R - Character forces a mode change to RTL, also part of mirroring test
             # L - Character forces a mode change to LTR, also part of mirroring test
             #      NOTE: this is a bit funky, but: 
@@ -419,11 +495,25 @@ def generate_unifont_bin():
     header += struct.pack('<B', length[2])
     start_of_mapping += len(mirror_mappings)
     
+    arabic_mapping = bytearray()
+    for c in arabic_lookup:
+        arabic_mapping += struct.pack('<H', c)
+    loc = struct.pack('<I', start_of_mapping)
+    header += struct.pack('<B', 64)                 # 64: Perso-Arabic shaping LUT
+    header += struct.pack('<B', loc[0])
+    header += struct.pack('<B', loc[1])
+    header += struct.pack('<B', loc[2])
+    length = struct.pack('<I', len(arabic_mapping))
+    header += struct.pack('<B', 0)
+    header += struct.pack('<B', length[0])
+    header += struct.pack('<B', length[1])
+    header += struct.pack('<B', length[2])
+    start_of_mapping += len(arabic_mapping)
 
     while len(header) < 256:
         header += b'\x00'
 
-    output = header + lookup + glyphs + uppercase_mappings + lowercase_mappings + titlecase_mappings + mirror_mappings
+    output = header + lookup + glyphs + uppercase_mappings + lowercase_mappings + titlecase_mappings + mirror_mappings + arabic_mapping
 
     print("Final size: {} bytes.\n\n".format(len(output)))
     
