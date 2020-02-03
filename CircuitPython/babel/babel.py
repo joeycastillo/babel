@@ -156,6 +156,14 @@ class _Babel:
         except AttributeError:
             return codepoint
 
+    def mirrored_mapping_for_codepoint(self, codepoint):
+        """Returns the mirror image of this glyph for use in right-to-left text runs,
+        or the same codepoint if there is no mirror mapping table available."""
+        try:
+            return self._mapping_for_codepoint(codepoint, self.start_of_mirrored_mapping, self.end_of_mirrored_mapping)
+        except AttributeError:
+            return codepoint
+
     def _arabic_mapping_for_codepoint(self, codepoint):
         """Returns an array of length 4, containing up to four alternate glyph forms for a
         given codepoint in the order: isolated, initial, medial, final. Forms that do not
