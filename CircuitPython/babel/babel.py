@@ -16,15 +16,17 @@ class _Babel:
     BABEL_HEADER_EXTRA_TYPE_ARABIC_MAPPINGS = const(64)
 
     def __init__(self):
-        header = bytearray(20)
+        header = bytearray(16)
         self._read_address(4, header)
         (self.width,
          self.height,
          self.flags,
          self.location_of_glyphs,
          self.last_codepoint,
-         self.location_of_lut,
-         self.location_of_extras) = struct.unpack('<BBHIIII', header)
+         self.location_of_lut) = struct.unpack('<BBHIII', header)
+        extras = bytearray(4)
+        self._read_address(148, extras)
+        self.location_of_extras = struct.unpack('<I', extras)[0]
 
         mapping_info = bytearray(8)
         pos = self.location_of_extras

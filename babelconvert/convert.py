@@ -334,6 +334,8 @@ def generate_unifont_bin():
             # this gives us the 10 high bits to use for whatever we want!
             # 0bBCLRNWWWWWxxxxxxxxxxxxxxxxxxxxxx
             # WWWWW - width / advance. Currently the only values are 0, 8 and 16, but I'm leaving it as a five bit value in case a variable width font becomes a thing.
+            #         If we get to a point where 22-bit addresses aren't enough, we can steal the lower three bits to support up to 32MB of glyph data, at the cost of
+            #         losing more granular width information (currently 8 and 16 only set the high bits anyway).
             # N - Character is a COMBINING, ENCLOSING or NON-SPACING mark.
             # R - Character forces a mode change to RTL, also part of mirroring test
             # L - Character forces a mode change to LTR, also part of mirroring test
@@ -435,17 +437,31 @@ def generate_unifont_bin():
     header += struct.pack('<B', 16)                     # 1 byte, nominal line height
     header += struct.pack('<H', 0)                      # 2 bytes, flags for features?
     header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
-    header += struct.pack('<I', last_codepoint)         # the last Unicode codepoint in this file, inclusive
-    header += struct.pack('<I', start_of_lookup)        # the start of the lookup table, right after the header
+    # This next bit seems like a waste of space, but here's the thought: there are 17 Unicode planes.
+    # We allocate 8 bytes to each, one uint that indicates the supported code points in that plane,
+    # and one uint for an address where the lookup table resides. Both are 0 if the plane is unsupported.
+    # yes yes I know only three planes have glyphs in them right now; this is for the future.
+    header += struct.pack('<I', last_codepoint)         # the last Unicode codepoint for Plane 0
+    header += struct.pack('<I', start_of_lookup)        # the start of the lookup table for plane 0
+    for i in range(1, 17):
+        header += struct.pack('<I', 0)                  # the last Unicode codepoint for Planes 1-16 (TODO)
+        header += struct.pack('<I', 0)                  # the address of the lookup table for each plane
+
+    # on the upside, now we know the extras is at a fixed location, 148,
+    # and that's not going to change unless Unicode adds more planes.
+    assert(len(header) == 148)
     header += struct.pack('<I', len(header) + 4)        # the start of "extra" data infos, it's inside the header. In fact, it's up next.
+
     # the rest of the header is just kind of just info about the stuff we stuffed at the end.
     # the general format: 
-    #  * 3 bytes: the location of the data
     #  * 1 byte: the type of data
-    #  * 3 bytes: the length of the data
+    #  * 3 bytes: the location of the data
     #  * 1 byte: flags about the data
+    #  * 3 bytes: the length of the data
     # why did i pack it this way? because i just want to read the 4-byte values as an unsigned little-endian int.
-    # value & 0xFF gives me the type/flags, value >> 8 gives me the location/length
+    # value & 0xFF gives me the type/flags, value >> 8 gives me the location/length.
+    # Currently all these LUTs are 2-byte shorts and only support the basic multilingual plane; for the higher planes,
+    # we will need to use 4-byte ints. Flags may come into play at that point.
 
     loc = struct.pack('<I', start_of_mapping)
     header += struct.pack('<B', 1)                  # this is just arbitrary, 1 means mappings from lowercase to uppercase
