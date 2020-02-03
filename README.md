@@ -11,10 +11,13 @@ The [GD25Q16C SPI Flash chip](https://www.digikey.com/product-detail/en/GD25Q16C
 * Two more bytes per character for additional metadata, including [general category](https://en.wikipedia.org/wiki/Template:General_Category_(Unicode)) and proper [bidi class](https://en.wikipedia.org/wiki/Template:Bidi_Class_(Unicode)), for more technically correct bidirectional algorithm implementation
 * A bit to indicate whether the character is [whitespace](https://www.unicode.org/Public/UCD/latest/ucd/PropList.txt).
 * A bit to indicate [word wrapping opportunities](https://www.unicode.org/Public/UCD/latest/ucd/LineBreak.txt).
-* One-to-one case mappings from uppercase to lowercase and lowercase to uppercase / titlecase for all bicameral scripts.
-* Mappings of supported glyphs to their mirror images, for correct [bidirectional mirroring](https://www.unicode.org/Public/UCD/latest/ucd/BidiMirroring.txt) in right-to-left text runs.
+* One-to-one case mappings from uppercase to lowercase and lowercase to uppercase / titlecase for all bicameral scripts in the Basic Multilingual Plane.
+* Mappings of supported BMP glyphs to their mirror images, for correct [bidirectional mirroring](https://www.unicode.org/Public/UCD/latest/ucd/BidiMirroring.txt) in right-to-left text runs.
+* A lookup table for mapping isolated Perso-Arabic characters to connected presentation forms.
 
-This still leaves just over 26 kilobytes at the end, for more mappings or other glyph-specific features. There are also two free bits per character in the additional metadata field, for general features that apply to all glyphs. Haven't decided how to use them yet.
+This still leaves just over 25 kilobytes at the end, for more mappings or other glyph-specific features. There are also two free bits per character in the additional metadata field, for general features that apply to all glyphs. Haven't decided how to use them yet.
+
+As of February 2020 I'm considering a return to the filesystem use case, for a couple of reasons: one, most of the devices I want to use this with already have a Flash chip; making it bigger is cheaper than adding a second one. It also frees up a microcontroller pin. Mostly though it opens up the possibility of supporting more Unicode planes; without the 2MB limitation, we can add even more glyphs!
 
 ## Project Structure
 
@@ -29,15 +32,15 @@ This still leaves just over 26 kilobytes at the end, for more mappings or other 
 ## Next Steps
 
 - [X] Create a subclass of Babel that can draw text to a GFX display.
-  - [ ] Handle screen size and margins, clipping
+  - [X] Handle screen size and margins, clipping
   - [ ] Handle character wrapping
-  - [ ] Handle RTL direction changes
-  - [ ] Handle combining marks
-  - [ ] Glyph magnification (i.e. size=2)
+  - [X] Handle RTL direction changes
+  - [X] Handle combining marks
+  - [X] Glyph magnification (i.e. size=2)
 - [ ] String manipulation
   - [X] Uppercase
   - [X] Lowercase
   - [ ] Capitalization
-  - [ ] Word wrap
-- [ ] Make a [simple FeatherWing with the chip](https://github.com/joeycastillo/Feather-Projects/tree/master/Experiments), for easier testing on more devices. 
-- [ ] Port to CircuitPython!
+  - [ ] Word wrap (WIP)
+- [X] Make a [simple FeatherWing with the chip](https://github.com/joeycastillo/Feather-Projects/tree/master/Experiments), for easier testing on more devices. 
+- [ ] [Port to CircuitPython!](https://github.com/joeycastillo/babel/tree/master/CircuitPython/babel)
