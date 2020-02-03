@@ -434,9 +434,9 @@ def generate_unifont_bin():
     header += struct.pack('<B', 8)                      # 1 byte, nominal width
     header += struct.pack('<B', 16)                     # 1 byte, nominal line height
     header += struct.pack('<H', 0)                      # 2 bytes, flags for features?
+    header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
     header += struct.pack('<I', last_codepoint)         # the last Unicode codepoint in this file, inclusive
     header += struct.pack('<I', start_of_lookup)        # the start of the lookup table, right after the header
-    header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
     header += struct.pack('<I', len(header) + 4)        # the start of "extra" data infos, it's inside the header. In fact, it's up next.
     # the rest of the header is just kind of just info about the stuff we stuffed at the end.
     # the general format: 

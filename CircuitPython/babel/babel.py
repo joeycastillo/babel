@@ -21,9 +21,9 @@ class _Babel:
         (self.width,
          self.height,
          self.flags,
+         self.location_of_glyphs,
          self.last_codepoint,
          self.location_of_lut,
-         self.location_of_glyphs,
          self.location_of_extras) = struct.unpack('<BBHIIII', header)
 
         mapping_info = bytearray(8)
