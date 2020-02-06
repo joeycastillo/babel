@@ -6,6 +6,12 @@ try:
 except ImportError:
     glyph_cache = None
 
+class _PlaneInfo:
+    def __init__(self, first, last, lut):
+        self.first_codepoint = first
+        self.last_codepoint = last
+        self.location_of_lut = lut
+
 class _Babel:
     """Abstract class for access to Unicode info / Unifont glyphs.
     Use FileBabel or FlashBabel depending on where you stored the Babel image."""
@@ -16,22 +22,31 @@ class _Babel:
     BABEL_HEADER_EXTRA_TYPE_ARABIC_MAPPINGS = const(64)
 
     def __init__(self):
-        header = bytearray(16)
+        header = bytearray(32)
         self._read_address(4, header)
         (self.width,
          self.height,
          self.flags,
          self.location_of_glyphs,
-         self.first_codepoint,
-         self.last_codepoint,
-         self.location_of_lut) = struct.unpack('<BBHIHHI', header)
+         first_plane0_codepoint,
+         last_plane0_codepoint,
+         location_of_plane0_lut,
+         first_plane1_codepoint,
+         last_plane1_codepoint,
+         location_of_plane1_lut,
+         first_plane2_codepoint,
+         last_plane2_codepoint,
+         location_of_plane2_lut) = struct.unpack('<BBHIHHIHHIHHI', header)
+        self.planes = [_PlaneInfo(first_plane0_codepoint, last_plane0_codepoint, location_of_plane0_lut),
+                       _PlaneInfo(first_plane1_codepoint, last_plane1_codepoint, location_of_plane1_lut),
+                       _PlaneInfo(first_plane2_codepoint, last_plane2_codepoint, location_of_plane2_lut)]
         extras = bytearray(4)
         self._read_address(148, extras)
         self.location_of_extras = struct.unpack('<I', extras)[0]
 
         mapping_info = bytearray(8)
         pos = self.location_of_extras
-        while pos < self.location_of_lut:
+        while pos < location_of_plane0_lut:
             self._read_address(pos, mapping_info)
             pos = pos + 8
             (loc, len) = struct.unpack('<II', mapping_info)
@@ -55,7 +70,7 @@ class _Babel:
                 self.start_of_arabic_mapping = loc
                 self.arabic_mapping_num_entries = int(len // (2 * 4)) # 4 entries of 2 bytes each
 
-        replacement_character = 0xFFFD if self.last_codepoint >= 0xFFFD else 0x003F # question mark
+        replacement_character = 0xFFFD if last_plane0_codepoint >= 0xFFFD else 0x003F # question mark
         self.info_for_replacement_character = self._fetch_glyph_basic_info(replacement_character)
         self.extended_info_for_replacement_character = self._fetch_glyph_extended_info(replacement_character)
         if glyph_cache is not None:
@@ -77,7 +92,17 @@ class _Babel:
             * 1 bit  : is control character
             * 1 bit  : line break opportunity
         """
-        loc = self.location_of_lut + codepoint * 6
+        plane = None
+        location_in_plane = codepoint & 0xFFFF
+        try:
+            plane = self.planes[codepoint >> 16]
+            if codepoint >> 16:
+                print(codepoint >> 16, plane, codepoint, plane.first_codepoint, plane.last_codepoint)
+            if location_in_plane > plane.last_codepoint or location_in_plane < plane.first_codepoint:
+                raise IndexError()
+        except IndexError:
+            return self.info_for_replacement_character
+        loc = plane.location_of_lut + ((codepoint - plane.first_codepoint) & 0xFFFF) * 6
         buf = bytearray(4)
         self._read_address(loc, buf)
         (retval,) = struct.unpack('<I', buf)
@@ -96,7 +121,14 @@ class _Babel:
             * 1 bit  : is whitespace
         The two high bits are unset and may be used for additional features in the future.
         """
-        loc = 4 + self.location_of_lut + codepoint * 6
+        plane = None
+        try:
+            plane = self.planes[codepoint >> 16]
+            if codepoint > plane.last_codepoint or codepoint < plane.first_codepoint:
+                raise IndexError()
+        except IndexError:
+            return self.extended_info_for_replacement_character
+        loc = plane.location_of_lut + ((codepoint - plane.first_codepoint) & 0xFFFF) * 6
         buf = bytearray(2)
         self._read_address(loc, buf)
         (retval,) = struct.unpack('<H', buf)

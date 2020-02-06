@@ -28,14 +28,7 @@ class BabelFont(glyph_cache.GlyphCache):
             return
         while remaining:
             codepoint = remaining.pop()
-            info = None
-            if codepoint <= self.babel.last_codepoint:
-                info = self.babel._fetch_glyph_basic_info(codepoint)
-            if info is None or info == 0:
-                # info can be None if asking for a glyph > 0xFFFF
-                # info can be 0 if asking for an invalid glyph <= 0xFFFF
-                # either way, give them the replacement character
-                info = self.babel.info_for_replacement_character
+            info = self.babel._fetch_glyph_basic_info(codepoint)
             loc = info & 0x3FFFFF
             width = (info >> 22) & 0x1F
             bitmap = displayio.Bitmap(width, self.babel.height, 2)

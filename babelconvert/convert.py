@@ -315,17 +315,28 @@ for i in range(0x0600, 0x0700):
                     if p_name == name + form:
                         arabic_lookup[4 * (i - 0x0621) + k] = j
 
+# the last codepoint to include in the LUT
+last_codepoint = 0xFFFF
+
+# pad output file to the size of a GD25Q16C flash chip
+padding = 2097152
+
 
 def generate_unifont_bin():
     lookup = bytearray()
     glyphs = bytearray()
-    last_codepoint = 0xFFFF
     stop_at = last_codepoint + 1
 
     current_position = 256 + stop_at * 6
+    start_of_plane1_lut = 0
+    start_of_plane2_lut = 0
     for i in range(0, stop_at):
+        if i > 0xFFFF and start_of_plane1_lut == 0:
+            start_of_plane1_lut = len(lookup) + 256
+        if i > 0x1FFFF and start_of_plane2_lut == 0:
+            start_of_plane2_lut = len(lookup) + 256
+
         codepoint = "{0:#06X}".format(i)[2:]
-        
         if codepoint in unifont:
             character = unifont[codepoint]
             glyphdata = character.glyphdata
@@ -396,8 +407,11 @@ def generate_unifont_bin():
         if codepoint in unifont:
             character = unifont[codepoint]
             if character.uppercaseMapping is not None:
-                uppercase_mappings += struct.pack('<H', int(codepoint, 16))
-                uppercase_mappings += struct.pack('<H', int(character.uppercaseMapping, 16))
+                if i < 0x10000:
+                    uppercase_mappings += struct.pack('<H', int(codepoint, 16))
+                    uppercase_mappings += struct.pack('<H', int(character.uppercaseMapping, 16))
+                else:
+                    pass # TODO: Plane 1 mappings
 
     lowercase_mappings = bytearray()
     for i in range(0, stop_at):
@@ -405,8 +419,11 @@ def generate_unifont_bin():
         if codepoint in unifont:
             character = unifont[codepoint]
             if character.lowercaseMapping is not None:
-                lowercase_mappings += struct.pack('<H', int(codepoint, 16))
-                lowercase_mappings += struct.pack('<H', int(character.lowercaseMapping, 16))
+                if i < 0x10000:
+                    lowercase_mappings += struct.pack('<H', int(codepoint, 16))
+                    lowercase_mappings += struct.pack('<H', int(character.lowercaseMapping, 16))
+                else:
+                    pass # TODO: Plane 1 mappings
 
     titlecase_mappings = bytearray()
     for i in range(0, stop_at):
@@ -414,8 +431,11 @@ def generate_unifont_bin():
         if codepoint in unifont:
             character = unifont[codepoint]
             if character.titlecaseMapping is not None:
-                titlecase_mappings += struct.pack('<H', int(codepoint, 16))
-                titlecase_mappings += struct.pack('<H', int(character.titlecaseMapping, 16))
+                if i < 0x10000:
+                    titlecase_mappings += struct.pack('<H', int(codepoint, 16))
+                    titlecase_mappings += struct.pack('<H', int(character.titlecaseMapping, 16))
+                else:
+                    pass # TODO: Plane 1 mappings
 
     mirror_mappings = bytearray()
     for i in range(0, stop_at):
@@ -423,35 +443,57 @@ def generate_unifont_bin():
         if codepoint in unifont:
             character = unifont[codepoint]
             if character.mirrorMapping is not None:
-                mirror_mappings += struct.pack('<H', int(codepoint, 16))
-                mirror_mappings += struct.pack('<H', int(character.mirrorMapping, 16))
+                if i < 0x10000:
+                    mirror_mappings += struct.pack('<H', int(codepoint, 16))
+                    mirror_mappings += struct.pack('<H', int(character.mirrorMapping, 16))
+                else:
+                    pass # TODO: Plane 1 mappings
 
     start_of_lookup = 256
     start_of_glyph_data = start_of_lookup + len(lookup)
     start_of_mapping = start_of_glyph_data + len(glyphs)
     
     header = bytearray()
-    header += struct.pack('<H', 0x0000)                 # 2 bytes, reserved i guess
-    header += struct.pack('<H', 0x0001)                 # version, 2 bytes, major/minor
-    header += struct.pack('<B', 8)                      # 1 byte, nominal width
-    header += struct.pack('<B', 16)                     # 1 byte, nominal line height
-    header += struct.pack('<H', 0)                      # 2 bytes, flags for features?
-    header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
-    # This next bit seems like a waste of space, but here's the thought: there are 17 Unicode planes.
-    # We allocate 8 bytes to each, two shorts that indicate the supported code points in that plane (the
-    # low 16 bits of the codepoint, since the plane index tells us the five high bits), and one uint for
-    # an address where the lookup table resides. Both are 0 if the plane is unsupported.
-    # yes yes I know only three planes have glyphs in them right now; this is for the future.
-    header += struct.pack('<H', 0)                      # the first Unicode codepoint for Plane 0
-    header += struct.pack('<H', last_codepoint)         # the last Unicode codepoint for Plane 0
-    header += struct.pack('<I', start_of_lookup)        # the start of the lookup table for plane 0
-    for i in range(1, 17):
-        header += struct.pack('<H', 0)                  # the first Unicode codepoint for Planes 1-16 (TODO)
-        header += struct.pack('<H', 0)                  # the last Unicode codepoint for Planes 1-16 (TODO)
-        header += struct.pack('<I', 0)                  # the address of the lookup table for each plane
+    header += struct.pack('<H', 0x0000)                     # 2 bytes, reserved i guess
+    header += struct.pack('<H', 0x0001)                     # version, 2 bytes, major/minor
+    header += struct.pack('<B', 8)                          # 1 byte, nominal width
+    header += struct.pack('<B', 16)                         # 1 byte, nominal line height
+    header += struct.pack('<H', 0)                          # 2 bytes, flags for features?
+    header += struct.pack('<I', start_of_glyph_data)        # the start of the glyph data, right adter the LUT
 
-    # on the upside, now we know the extras is at a fixed location, 148,
-    # and that's not going to change unless Unicode adds more planes.
+    # This next bit may seem like a waste of space, but here's the thought: there are 17 Unicode planes.
+    # We allocate 8 bytes to each: two shorts that indicate the supported code points in that plane (the
+    # low 16 bits of the code point, since the plane index tells us the five high bits), and one uint for
+    # an address where the lookup table resides. All are 0 if the plane is unsupported.
+    # yes yes I know only three planes have glyphs in them right now; this is for the future.
+    header += struct.pack('<H', 0)                          # the first Unicode codepoint for Plane 0
+    header += struct.pack('<H', last_codepoint & 0xFFFF)    # the last Unicode codepoint for Plane 0
+    header += struct.pack('<I', start_of_lookup)            # the start of the lookup table for plane 0
+
+    header += struct.pack('<H', 0)                          # the low word of the first Unicode codepoint for Plane 1
+    if last_codepoint < 0x10000:
+        header += struct.pack('<H', 0)                      # no plane 1 glyphs
+    elif last_codepoint < 0x20000:
+        header += struct.pack('<H', last_codepoint & 0xFFFF)# the low word of the last Unicode codepoint for Plane 1
+    else:
+        header += struct.pack('<H', 0xFFFF)                 # the low word of the last Unicode codepoint for Plane 1
+    header += struct.pack('<I', start_of_plane1_lut)        # the start of the lookup table for plane 1
+
+    header += struct.pack('<H', 0)                          # the low word of the first Unicode codepoint for Plane 1
+    if last_codepoint < 0x20000:
+        header += struct.pack('<H', 0)                      # no plane 2 glyphs
+    else:
+        assert(last_codepoint < 0x30000)                    # Babel only supports encoding through Plane 2 (for now!)
+        header += struct.pack('<H', last_codepoint & 0xFFFF)# the low word of the last Unicode codepoint for Plane 2
+    header += struct.pack('<I', start_of_plane2_lut)        # the start of the lookup table for plane 2
+
+    for i in range(3, 17):
+        header += struct.pack('<H', 0) # Planes 3-16 are empty for now. Plane 14 has some assigned code points, but
+        header += struct.pack('<H', 0) # they're all tags and variation selectors. Planes 15-16 are private use; we
+        header += struct.pack('<I', 0) # could use these for shaping scripts that lack assigned presentation forms.
+
+    # on the upside, now we know the extras are at a fixed location: 148, and that's not going to change unless
+    # Unicode adds more planes.
     assert(len(header) == 148)
     header += struct.pack('<I', len(header) + 4)        # the start of "extra" data infos, it's inside the header. In fact, it's up next.
 
@@ -536,7 +578,7 @@ def generate_unifont_bin():
 
     print("Final size: {} bytes.\n\n".format(len(output)))
     
-    while len(output) < 2097152:
+    while len(output) < padding:
         output += b'\xFF'
 
     outfile = open('babel.bin', 'wb')
@@ -547,6 +589,8 @@ while 1:
     print("Commands:")
     print("\t1. Print glyph information")
     print("\t2. Generate babel.bin")
+    print("\t3. Set last codepoint")
+    print("\t4. Set padding")
     print("\tQ. Quit")
     command = input("What do you want to do? ")
     if command == '1':
@@ -560,5 +604,19 @@ while 1:
         print("Loaded data for {} glyphs.\n\n".format(len(unifont)))
     elif command == '2':
         generate_unifont_bin()
+    elif command == '3':
+        print("Last codepoint is", last_codepoint)
+        print("\tnotes: ")
+        print("\t65535 = all of plane 0 (2,071,692 bytes)")
+        print("\t129685 = plane 1 through last assigned codepoint (2,752,848 bytes)")
+        print("\t173594 = plane 2 through last Unifont glyph (3,025,966) bytes")
+        print("\t195101 = plane 2 through last assigned codepoint (3,155,040 bytes)")
+        print("Plane 2 support ")
+        new_last_codepoint = input("New last codepoint: ")
+        last_codepoint = int(new_last_codepoint)
+    elif command == '4':
+        print("Padding is currently set to", padding)
+        new_padding = input("New padding value (0 for none): ")
+        padding = int(new_padding)
     elif command.upper() == 'Q':
         exit(0)
