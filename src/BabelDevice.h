@@ -152,7 +152,7 @@ protected:
 private:
     uint8_t width = 0;
     uint8_t height = 0;
-    uint32_t last_codepoint = 0;
+    uint16_t last_codepoint = 0;
     uint32_t location_of_lut = 0;
     uint32_t location_of_glyphs = 0;
     uint32_t location_of_extras = 0;

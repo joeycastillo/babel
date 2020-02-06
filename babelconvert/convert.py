@@ -438,13 +438,16 @@ def generate_unifont_bin():
     header += struct.pack('<H', 0)                      # 2 bytes, flags for features?
     header += struct.pack('<I', start_of_glyph_data)    # the start of the glyph data, right adter the LUT
     # This next bit seems like a waste of space, but here's the thought: there are 17 Unicode planes.
-    # We allocate 8 bytes to each, one uint that indicates the supported code points in that plane,
-    # and one uint for an address where the lookup table resides. Both are 0 if the plane is unsupported.
+    # We allocate 8 bytes to each, two shorts that indicate the supported code points in that plane (the
+    # low 16 bits of the codepoint, since the plane index tells us the five high bits), and one uint for
+    # an address where the lookup table resides. Both are 0 if the plane is unsupported.
     # yes yes I know only three planes have glyphs in them right now; this is for the future.
-    header += struct.pack('<I', last_codepoint)         # the last Unicode codepoint for Plane 0
+    header += struct.pack('<H', 0)                      # the first Unicode codepoint for Plane 0
+    header += struct.pack('<H', last_codepoint)         # the last Unicode codepoint for Plane 0
     header += struct.pack('<I', start_of_lookup)        # the start of the lookup table for plane 0
     for i in range(1, 17):
-        header += struct.pack('<I', 0)                  # the last Unicode codepoint for Planes 1-16 (TODO)
+        header += struct.pack('<H', 0)                  # the first Unicode codepoint for Planes 1-16 (TODO)
+        header += struct.pack('<H', 0)                  # the last Unicode codepoint for Planes 1-16 (TODO)
         header += struct.pack('<I', 0)                  # the address of the lookup table for each plane
 
     # on the upside, now we know the extras is at a fixed location, 148,

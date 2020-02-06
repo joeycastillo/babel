@@ -22,8 +22,9 @@ class _Babel:
          self.height,
          self.flags,
          self.location_of_glyphs,
+         self.first_codepoint,
          self.last_codepoint,
-         self.location_of_lut) = struct.unpack('<BBHIII', header)
+         self.location_of_lut) = struct.unpack('<BBHIHHI', header)
         extras = bytearray(4)
         self._read_address(148, extras)
         self.location_of_extras = struct.unpack('<I', extras)[0]
@@ -54,8 +55,9 @@ class _Babel:
                 self.start_of_arabic_mapping = loc
                 self.arabic_mapping_num_entries = int(len // (2 * 4)) # 4 entries of 2 bytes each
 
-        self.info_for_replacement_character = self._fetch_glyph_basic_info(0xFFFD)
-        self.extended_info_for_replacement_character = self._fetch_glyph_extended_info(0xFFFD)
+        replacement_character = 0xFFFD if self.last_codepoint >= 0xFFFD else 0x003F # question mark
+        self.info_for_replacement_character = self._fetch_glyph_basic_info(replacement_character)
+        self.extended_info_for_replacement_character = self._fetch_glyph_extended_info(replacement_character)
         if glyph_cache is not None:
             self.font = BabelFont(self)
         else:
