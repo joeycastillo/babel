@@ -12,10 +12,10 @@ Features:
 With a file on the filesystem:
 
 ```import board
-from babel.babel import FileBabel
+from babel.babel import Babel
 from adafruit_display_text import label
 
-babel = FileBabel() # assumes BABEL.BIN or pass in a filename
+babel = Babel() # assumes BABEL.BIN or pass in a filename
 display = board.DISPLAY
 text = """Short sayings:
 जान है तो जहान है

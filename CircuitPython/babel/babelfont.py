@@ -1,6 +1,9 @@
 import displayio
 from adafruit_bitmap_font import glyph_cache
-from display_bidi_text import bidi_glyph
+try:
+    from displayio import Glyph
+except ImportError:
+    from fontio import Glyph
 
 class BabelFont(glyph_cache.GlyphCache):
     def __init__(self, babel):
@@ -53,4 +56,5 @@ class BabelFont(glyph_cache.GlyphCache):
                 mirrored = self.babel.mirrored_mapping_for_codepoint(code_point)
             rtl = False if mirrored else (info & 0x10000000) != 0
             ltr = False if mirrored else (info & 0x20000000) != 0
-            self._glyphs[code_point] = bidi_glyph.BidiGlyph(bitmap, 0, width, self.babel.height, -width if nsm else 0, 0, 0 if nsm else width, 0, rtl, ltr, mirrored)
+            g = Glyph(bitmap, 0, width, self.babel.height, -width if nsm else 0, 0, 0 if nsm else width, 0)
+            self._glyphs[code_point] = g

@@ -1,10 +1,7 @@
 import displayio
 import struct
-try:
-    from adafruit_bitmap_font import glyph_cache
-    from babel.babelfont import BabelFont
-except ImportError:
-    glyph_cache = None
+from adafruit_bitmap_font import glyph_cache
+from babel.babelfont import BabelFont
 
 class _PlaneInfo:
     def __init__(self, first, last, lut):
