@@ -119,13 +119,14 @@ class _Babel:
         The two high bits are unset and may be used for additional features in the future.
         """
         plane = None
+        location_in_plane = codepoint & 0xFFFF
         try:
             plane = self.planes[codepoint >> 16]
-            if codepoint > plane.last_codepoint or codepoint < plane.first_codepoint:
+            if location_in_plane > plane.last_codepoint or codepoint < plane.first_codepoint:
                 raise IndexError()
         except IndexError:
             return self.extended_info_for_replacement_character
-        loc = plane.location_of_lut + ((codepoint - plane.first_codepoint) & 0xFFFF) * 6
+        loc = 4 + plane.location_of_lut + ((codepoint - plane.first_codepoint) & 0xFFFF) * 6
         buf = bytearray(2)
         self._read_address(loc, buf)
         (retval,) = struct.unpack('<H', buf)
