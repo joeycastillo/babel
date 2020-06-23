@@ -1,22 +1,14 @@
 #include <SdFat.h>
 #include <Adafruit_SPIFlash.h>
+#include <OpenBook.h>
 
 /* This is literally the Adafruit SPI Flash manipulator sketch, tweaked to burn Babel onto a
-   secondary flash chip instead of your main one.
-   To use: copy babel.bin to an SD card, update the CS pins below, run it and follow the prompts. */
-
-// I'm doing this on the eBook wing, where once I left its chip select floating and writing
-// the flash it flooded the screen with static. Comment this out if you don't need it.
-#define ECS 9
-// Flash chip select. I'm using a Feather M4 express with the flash CS wired to extra pin D4
-#define FCS 4
-// On the eBook wing SD CS is 5.
-#define SDCS 5
-
+ * secondary flash chip instead of your main one.
+ */
 
 #define MAXPAGESIZE 256
 
-Adafruit_FlashTransport_SPI flashTransport(FCS, &SPI);
+Adafruit_FlashTransport_SPI flashTransport(OPENBOOK_BCS, &SPI);
 
 Adafruit_SPIFlash flash(&flashTransport);
 
@@ -34,10 +26,11 @@ void error(char *str) {
 }
 
 void setup(void) {
-  #ifdef ECS
-  pinMode(ECS, OUTPUT);
-  digitalWrite(ECS, HIGH);
-  #endif
+  if (OPENBOOK_DISPLAY_BUS == &SPI) {
+    // if we are on a device where the screen shares a bus with Babel, keep the screen disabled.
+    pinMode(OPENBOOK_ECS, OUTPUT);
+    digitalWrite(OPENBOOK_ECS, HIGH);
+  }
   Serial.begin(115200);
   while (!Serial) delay(1);
 
@@ -49,7 +42,7 @@ void setup(void) {
 
   Serial.print("Initializing SD card... ");
   // see if the card is present and can be initialized:
-  if (!sd.begin(SDCS, SD_SCK_MHZ(50))) {
+  if (!sd.begin(OPENBOOK_SDCS, SD_SCK_MHZ(50))) {
     Serial.println("Card failed, or not present");
     // don't do anything more:
     while (1);
