@@ -38,10 +38,10 @@ With a dedicated Flash chip for Babel:
 
 ```import board
 import digitalio
-from babel.babel import FlashBabel
+from babel.flashbabel import FlashBabel
 from adafruit_display_text import label
 
-cs = digitalio.DigitalInOut(board.D6)
+cs = digitalio.DigitalInOut(board.BCS) # replace with the chip select pin for your board
 babel = FlashBabel(cs)
 
 display = board.DISPLAY
@@ -57,6 +57,9 @@ text_area = label.Label(babel.font, text=uppercase_text, color=0xFFFFFF)
 text_area.x = 0
 text_area.y = 72
 display.show(text_area)
+
+# uncomment this next line if you are using a board with an e-paper display like the Open Book
+# display.refresh()
 
 while True:
     pass
