@@ -73,16 +73,20 @@ void BabelTypesetter::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, u
     }
 }
 
-int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size) {
+int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size) {\
+    int retVal = 0;
+
     for (uint8_t i = 0; i < (this->bold ? 2 : 1); i++) {
         if (this->italic) {
             for(uint8_t j = 0; j < 4; j++) {
-                this->drawGlyph(x + i + 4 - j, y, glyph, color, size, j * 4, j * 4 + 4);
+                retVal = this->drawGlyph(x + i + 4 - j, y, glyph, color, size, j * 4, j * 4 + 4);
             }
         } else {
-            this->drawGlyph(x + i, y, glyph, color, size, 0, this->babelDevice->getHeight());
+            retVal = this->drawGlyph(x + i, y, glyph, color, size, 0, this->babelDevice->getHeight());
         }
     }
+
+    return retVal;
 }
 
 int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t color, uint8_t size, uint8_t startY, uint8_t endY) {
