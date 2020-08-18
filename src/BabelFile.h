@@ -1,9 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright © 2019 Joey Castillo. All rights reserved.
- * Incorporates ideas and code from the Adafruit_GFX library.
- * Copyright (c) 2013 Adafruit Industries.  All rights reserved.
+ * Copyright © 2020 Joey Castillo. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,27 +22,21 @@
  * THE SOFTWARE.
  */
 
-#include <string.h>
-#include "BabelTypesetterGFX.h"
+#ifndef BabelFile_h
+#define BabelFile_h
 
-BabelTypesetterGFX::BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *spi) {
-    this->gfx = gfx;
-    this->babelDevice = new BabelSPIFlash(cs, spi);
-}
+#include <stdio.h>
+#include <Adafruit_SPIFlash.h>
+#include "BabelDevice.h"
 
-BabelTypesetterGFX::BabelTypesetterGFX(Adafruit_GFX *gfx, FatFileSystem *fatfs, char *filename) {
-    this->gfx = gfx;
-    this->babelDevice = new BabelFile(fatfs, filename);
-}
+class BabelFile: public BabelDevice {
+public:
+    BabelFile(FatFileSystem *filesystem, char *filename);
+    void begin();
+    void read(uint32_t addr, void *data, uint32_t len);
+private:
+    FatFileSystem *filesystem;
+    char *filename;
+};
 
-void BabelTypesetterGFX::begin() {
-    BabelTypesetter::begin();
-}
-
-void BabelTypesetterGFX::drawPixel(int16_t x, int16_t y, uint16_t color) {
-    this->gfx->writePixel(x, y, color);
-}
-
-void BabelTypesetterGFX::drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    this->gfx->writeFillRect(x, y, w, h, color);
-}
+#endif /* BabelFile_h */
