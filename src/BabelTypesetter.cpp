@@ -151,6 +151,74 @@ int BabelTypesetter::drawGlyph(int16_t x, int16_t y, BabelGlyph glyph, uint16_t 
 
 size_t BabelTypesetter::writeCodepoint(BABEL_CODEPOINT codepoint) {
     BabelGlyph glyph;
+
+    if (this->awaitingCodepoints) {
+        switch (this->awaitingFormatter) {
+            case 0xFDDE:
+                this->awaitingCodepoints = 0;
+                this->awaitingFormatter = 0;
+                this->setTextSize(codepoint & 0xF);
+                return 0;
+            case 0xFDDD:
+                // TODO: text color
+                this->awaitingCodepoints -= 1;
+                if (awaitingCodepoints == 0) {
+                    awaitingFormatter = 0;
+                }
+                return 0;
+            default:
+                // should not happen; we should only be awaiting codepoints when we have an active formatter.
+                this->awaitingCodepoints = 0;
+                this->awaitingFormatter = 0;
+                this->print("Ｐａｒｓｅ ｅｒｒｏｒ\n");
+                return 0;
+        }
+    }
+
+    if (codepoint >= 0xFDD0 && codepoint <= 0xFDEF) {
+        if (codepoint & 0x10) {
+            // formatting character
+            switch (codepoint & 0xFFFE) {
+                case 0xFDD0:
+                    this->setBold(codepoint & 1);
+                    return 0;
+                case 0xFDD2:
+                    this->setItalic(codepoint & 1);
+                    return 0;
+                case 0xFDD4:
+                    // TODO: Underline
+                    return 0;
+                case 0xFDD6:
+                    // TODO: Strikethrough
+                    return 0;
+                case 0xFDD8:
+                    // TODO: Blockquote
+                    return 0;
+                case 0xFDDA:
+                    // TODO: Code mode
+                    return 0;
+                case 0xFDDC:
+                    if (codepoint & 1) {
+                        this->awaitingCodepoints = 3;
+                        this->awaitingFormatter = codepoint;
+                    } else {
+                        this->setTextColor(0);
+                    }
+                    return 0;
+                case 0xFDDE:
+                    if (codepoint & 1) { // 0xFDDF
+                        this->resetFormatting();
+                    } else {
+                        this->awaitingCodepoints = 1;
+                        this->awaitingFormatter = codepoint;
+                    }
+                    return 0;
+            }
+        } else {
+            // TODO: link handling
+            return 0;
+        }
+    }
     this->babelDevice->fetch_glyph_data(codepoint, &glyph);
 
     if (this->direction == 1 && BABEL_INFO_GET_STRONG_RTL(glyph.info)) {
@@ -263,6 +331,13 @@ void BabelTypesetter::setItalic(bool italic) {
 
 void BabelTypesetter::setBold(bool bold) {
     this->bold = bold;
+}
+
+void BabelTypesetter::resetFormatting() {
+    this->setBold(false);
+    this->setItalic(false);
+    this->setTextSize(1);
+    this->setTextColor(0);
 }
 
 void BabelTypesetter::setWordWrap(bool wordWrap) {

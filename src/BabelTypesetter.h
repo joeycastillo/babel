@@ -114,6 +114,22 @@ public:
      @param codepoint The codepoint you wish to draw. Not UTF-8. Not UTF-16. The codepoint itself.
      @returns the number 1 if a codepoint was written, 0 if one was not.
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
+           This method also handles some special implementation-specific codepoints that alter the typesetter's text formatting. These codepoints are all noncharacters from U+FDD0 to U+FDDF. Strings intended for interchange should not contain any of these codepoints; on the other hand, strings intended for use with Babel may use them to alter the behavior of the typesetter.
+
+           The following formatting code points are defined:
+           U+FDD1/U+FDD0: Set or unset boldface formatting
+           U+FDD3/U+FDD2: Set or unset italic formatting
+           U+FDD5/U+FDD4: Set or unset underlining (not currently implemented)
+           U+FDD7/U+FDD6: Set or unset strikethrough (not currently implemented)
+           U+FDD9/U+FDD8: Begin or end block quote mode (not currently implemented)
+           U+FDDB/U+FDDA: Begin or end a code block (not currently implemented)
+           U+FDDD       : Set text color. Six codepoints should follow this; all must be numerals (i.e. U+0031 to U+0039) or the letters A-F (U+0041 to U+0046) forming a hex code of the desired color in RGB order.
+           U+FDDC       : Reset text color to the default value.
+           U+FDDE       : Set text size. A single number from 1-9 should follow this codepoint.
+           U+FDDF       : Reset all formatting.
+
+           Formatting odepoints from U+FDEO to U+FDE7 are currently undefined. Codepoints U+FDE8 to U+FDED are tentatively intended to enable inline links and images.
+           When a formatting codepoint is encountered, this method will return 0, as formatting may have changed, but a code point was not written.
     */
     size_t writeCodepoint(BABEL_CODEPOINT codepoint);
     /**
@@ -122,6 +138,7 @@ public:
      @param len The number of codepoints in the array
      @returns the number of codepoints written
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
+     @see writeCodepoint for notes on formatting control characters.
     */
     size_t writeCodepoints(BABEL_CODEPOINT codepoints[], size_t len);
     /**
@@ -129,6 +146,7 @@ public:
      @param utf8String a NULL-terminated UTF-8 string
      @returns the number of codepoints printed
      @note This method handles newlines and direction changes, and updates the current cursor position. It might move 8 or 16 pixels to the right, OR it might move to the left side of the next line if the text wrapped. But it could also move to the right side of the next line if the layout direction changed to RTL mode.
+     @see writeCodepoint for notes on formatting control characters.
     */
     size_t print(char * utf8String);
 
@@ -175,6 +193,13 @@ public:
 
     /**
     /*!
+     @brief resets all formatting to the default (size 1, no bold or italic, color black). Does not change margins, word wrap or cursor position.
+    */
+    /**************************************************************************/
+    void resetFormatting();
+
+    /**
+    /*!
      @brief sets the line width for word wrapping
      @param lineWidth 0 to disable word wrapping, or the max width in pixels of a line
     */
@@ -199,6 +224,9 @@ private:
     // these next two are for combining and enclosing marks, which should be drawn atop the previously drawn glyph.
     bool hasLastGlyph = false;
     Point lastGlyphPosition;
+    // this is for formatting, where some formatting codepoints (like text size or color) require that we treat one or more "normal" codepoints as formatting info.
+    int8_t awaitingCodepoints = 0;
+    uint16_t awaitingFormatter = 0;
 };
 
 #endif /* BabelTypesetter_h */
