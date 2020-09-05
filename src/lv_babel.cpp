@@ -2,6 +2,7 @@
  * @file lv_babel.c
  *
  */
+#if 0 // skip this file for now
 
 #include "lv_babel.h"
 
@@ -68,3 +69,5 @@ int lv_babel_font_init(lv_font_t * font)
     
     return font->line_height == 0;
 }
+
+#endif
