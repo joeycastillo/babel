@@ -32,10 +32,12 @@ BabelTypesetterGFX::BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *
     this->babelDevice = new BabelSPIFlash(cs, spi);
 }
 
+#if BOARD_REQUIRES_BABEL_FILE
 BabelTypesetterGFX::BabelTypesetterGFX(Adafruit_GFX *gfx, FatFileSystem *fatfs, char *filename) {
     this->gfx = gfx;
     this->babelDevice = new BabelFile(fatfs, filename);
 }
+#endif
 
 void BabelTypesetterGFX::begin() {
     BabelTypesetter::begin();

@@ -30,15 +30,19 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "Adafruit_GFX.h"
-#include "Adafruit_SPIFlash.h"
 #include "BabelTypesetter.h"
 #include "BabelSPIFlash.h"
 #include "BabelFile.h"
+#if BOARD_REQUIRES_BABEL_FILE
+#include "Adafruit_SPIFlash.h"
+#endif
 
 class BabelTypesetterGFX: public BabelTypesetter {
 public:
     BabelTypesetterGFX(Adafruit_GFX *gfx, uint8_t cs, SPIClass *spi);
+#if BOARD_REQUIRES_BABEL_FILE
     BabelTypesetterGFX(Adafruit_GFX *gfx, FatFileSystem *fatfs, char *filename);
+#endif
     void begin();
     void drawPixel(int16_t x, int16_t y, uint16_t color);
     void drawFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);

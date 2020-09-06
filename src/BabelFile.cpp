@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#if BOARD_REQUIRES_BABEL_FILE
+
 #include "BabelFile.h"
 #include <Arduino.h>
 
@@ -40,3 +42,5 @@ void BabelFile::read(uint32_t addr, void *data, uint32_t len) {
     file.read(data, len);
     file.close();
 }
+
+#endif

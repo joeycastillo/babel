@@ -25,6 +25,8 @@
 #ifndef BabelFile_h
 #define BabelFile_h
 
+#if BOARD_REQUIRES_BABEL_FILE
+
 #include <stdio.h>
 #include <Adafruit_SPIFlash.h>
 #include "BabelDevice.h"
@@ -38,5 +40,7 @@ private:
     FatFileSystem *filesystem;
     char *filename;
 };
+
+#endif
 
 #endif /* BabelFile_h */
