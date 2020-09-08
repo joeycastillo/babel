@@ -36,7 +36,7 @@ void setup(void) {
 
   flash.begin();
 
-  Serial.println("Adafruit Serial Flash Manipulator example");
+  Serial.println("Babel Image Writing Utility");
   Serial.print("JEDEC ID: "); Serial.println(flash.getJEDECID(), HEX);
   Serial.print("Flash size: "); Serial.println(flash.size());
 
@@ -53,7 +53,9 @@ void setup(void) {
 
 void loop(void) {
   while (Serial.available()) { Serial.read(); }
-  Serial.println(F("FLASH DUMPER - Hello! Press E (rase), W (rite), V (erify), or D (ump) to begin"));
+  Serial.println();
+  Serial.println(F("Press E to Erase the chip, then W to Write the babel.bin image"));
+  Serial.println(F("When writing completes, press V to Verify that it flashed correctly."));
 
   while (!Serial.available());
   char cmd = toupper(Serial.read());
