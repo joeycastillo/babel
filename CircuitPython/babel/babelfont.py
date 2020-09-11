@@ -57,4 +57,4 @@ class BabelFont(glyph_cache.GlyphCache):
             rtl = False if mirrored else (info & 0x10000000) != 0
             ltr = False if mirrored else (info & 0x20000000) != 0
             g = Glyph(bitmap, 0, width, self.babel.height, -width if nsm else 0, 0, 0 if nsm else width, 0)
-            self._glyphs[code_point] = g
+            self._glyphs[codepoint] = g
